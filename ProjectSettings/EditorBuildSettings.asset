@@ -4,5 +4,20 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Unstore/TestMouseClickAround.unity
+    guid: c84624bfd67006d44ab1bf2d6bb3ae07
+  - enabled: 0
+    path: Assets/#WowCode/2022_04_29_TryPushKeyWow/WowSpam.unity
+    guid: 4d7acb36b9ac4134b83fe4f32eabd786
+  - enabled: 0
+    path: Assets/#WowCode/2022_04_25_ScreenToTextGPS/WowPixelBotTwoSquare.unity
+    guid: a4c6840c1da2dfe4c8ea5fc3c75a5ef6
+  - enabled: 0
+    path: Assets/#WowCode/2022_04_25_ScreenToTextGPS/WoWScreenZoneToTextOutput.unity
+    guid: 2a1223ae2ee4df4409008c5d32672b5c
+  - enabled: 0
+    path: Assets/#WowCode/2022_04_25_ScreenToTextGPS/WowOuputTextFileToInGameDemo.unity
+    guid: eb90aa7de790f0b4995bbb29b3fb438b
   m_configObjects: {}
