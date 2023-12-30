@@ -37,37 +37,37 @@ public class SendKeyMessageToWindowsDLL
     }
     private static void SendKeyDown(int Key, in IntPtrWrapGet target, in bool usePost)
     {
-        try
-        {
+        //try
+        //{
             if (usePost)
                 PostMessage(target.GetAsIntPtr(), WM_KEYDOWN, Key, 0);
             else SendMessage(target.GetAsIntPtr(), WM_KEYDOWN, Key, 0);
-        }
-        catch (Exception)
-        {
-            Eloi.E_CodeTag.DirtyCode.DirtyCatch();
-        }
+        //}
+        //catch (Exception)
+        //{
+        //    Eloi.E_CodeTag.DirtyCode.DirtyCatch();
+        //}
     }
 
     private static void SendKeyUp(int Key, in IntPtrWrapGet target, in bool usePost)
     {
-        try
-        {
+        //try
+        //{
             if (usePost)
                 PostMessage(target.GetAsIntPtr(), WM_KEYUP, Key, 0);
             else SendMessage(target.GetAsIntPtr(), WM_KEYUP, Key, 0);
-        }
-        catch (Exception)
-        {
-            Eloi.E_CodeTag.DirtyCode.DirtyCatch();
-        }
+        //}
+        //catch (Exception)
+        //{
+        //    Eloi.E_CodeTag.DirtyCode.DirtyCatch();
+        //}
     }
 
 
     internal static void SendKeyDownToProcessChildren(User32PostMessageKeyEnum Key, IntPtrWrapGet processId, in bool usePost = true)
     {
-        try
-        {
+        //try
+        //{
             IntPtrWrapGet[] prs = WindowIntPtrUtility.GetProcessIdChildrenWindows(processId);
             if (prs.Length <= 0) return;
             IntPtrWrapGet pr = prs[0];
@@ -75,16 +75,16 @@ public class SendKeyMessageToWindowsDLL
             {
                 SendKeyDown(Key, in processId, in usePost);
             }
-        }
-        catch (Exception)
-        {
-            Eloi.E_CodeTag.DirtyCode.DirtyCatch();
-        }
+        //}
+        //catch (Exception)
+        //{
+        //    Eloi.E_CodeTag.DirtyCode.DirtyCatch();
+        //}
     }
     internal static void SendKeyUpToProcessChildren(User32PostMessageKeyEnum Key, IntPtrWrapGet processId, in bool usePost = true)
     {
-        try
-        {
+        //try
+        //{
             IntPtrWrapGet[] prs = WindowIntPtrUtility.GetProcessIdChildrenWindows(processId);
             if (prs.Length <= 0) return;
             IntPtrWrapGet pr = prs[0];
@@ -92,11 +92,11 @@ public class SendKeyMessageToWindowsDLL
             {
                 SendKeyUp(Key, p, in usePost);
             }
-        }
-        catch (Exception)
-        {
-            Eloi.E_CodeTag.DirtyCode.DirtyCatch();
-        }
+        //}
+        //catch (Exception)
+        //{
+        //    Eloi.E_CodeTag.DirtyCode.DirtyCatch();
+        //}
     }
     public static void SendKeyClick(User32PostMessageKeyEnum key, IntPtrWrapGet processId, bool usePost)
     {

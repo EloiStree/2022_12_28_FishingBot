@@ -10,7 +10,6 @@ public class ProcessesAccessInScene : Eloi.GenericSingletonOfMono<ProcessesAcces
 
 public class ProcessesAccessMono : MonoBehaviour
 {
-
     public GroupOfProcessesInfo m_lastRefreshOfProcess = new GroupOfProcessesInfo();
     public GroupOfProcessesPairParentToChildren m_ProcessToChildrenPair = new GroupOfProcessesPairParentToChildren();
     public GroupOfProcessesParentToChildrens m_processToChildrens = new GroupOfProcessesParentToChildrens();
@@ -23,16 +22,20 @@ public class ProcessesAccessMono : MonoBehaviour
 
 
 
+
+
     public void FetchProcessInfoBasedOnIndex(in string processIdName, in int processIndex, out bool found, out TargetParentProcessIntPtr pointer)
     {
         found = false;
         pointer = new TargetParentProcessIntPtr();
         m_lastRefreshOfProcess.GetWith(out List<WindowIntPtrUtility.ProcessInformation> processes);
-        int count=0;
+        int count = 0;
         foreach (var item in processes)
         {
-            if (Eloi.E_StringUtility.AreEquals(item.m_processName, processIdName,true, true)) {
-                if (processIndex == count) {
+            if (Eloi.E_StringUtility.AreEquals(item.m_processName, processIdName, true, true))
+            {
+                if (processIndex == count)
+                {
                     found = true;
                     pointer.SetAsInt(item.m_processId);
                     return;
@@ -51,12 +54,22 @@ public class ProcessesAccessMono : MonoBehaviour
                 id.GetAsInt())
             {
                 found = true;
-                parentId =IntPtrTemp.Int( m_ProcessToChildrenPair.m_processesAndChildrens[i].m_parentId.GetProcessId());
+                parentId = IntPtrTemp.Int(m_ProcessToChildrenPair.m_processesAndChildrens[i].m_parentId.GetProcessId());
                 return;
             }
+
         }
-        found = false;
-        parentId = null;
+        if (id.GetAsInt() == 0)
+        {
+            found = false;
+            parentId = null;
+        }
+        else
+        {
+            found = true;
+            parentId = IntPtrTemp.Int(id.GetAsInt());
+        }
+
     }
 
     public void RefreshIfFirstTime()
@@ -67,10 +80,10 @@ public class ProcessesAccessMono : MonoBehaviour
 
     void Awake()
     {
-        if(m_autoLoadAllAtWake)
-        RefreshListOfProcesses();
+        if (m_autoLoadAllAtWake)
+            RefreshListOfProcesses();
     }
-     bool m_wasRefreshOnce;
+    bool m_wasRefreshOnce;
     [ContextMenu("Refresh")]
     public void RefreshListOfProcesses()
     {
@@ -103,7 +116,8 @@ public class ProcessesAccessMono : MonoBehaviour
 
     public void FetchListOfProcessesBasedOnName(string processName,
         out GroupOfProcessesParentToChildrens found,
-        bool reloadProcesses) {
+        bool reloadProcesses)
+    {
 
         if (reloadProcesses)
         {
@@ -127,18 +141,60 @@ public class ProcessesAccessMono : MonoBehaviour
        List<WindowIntPtrUtility.ProcessInformation> allProcess);
         m_lastRefreshOfProcess.SetWith(allProcess);
     }
+
+    public void GetProcessInfoFor(IntPtrWrapGet pt, out bool found, out WindowIntPtrUtility.ProcessInformation current)
+    {
+
+
+        int id = pt.GetAsInt();
+        int idParent = -1;
+        bool foundParentId = false; ;
+        for (int i = 0; i < m_processToChildrens.m_processesAndChildrens.Count && !foundParentId; i++)
+        {
+            for (int j = 0; j < m_processToChildrens.m_processesAndChildrens[i].m_childrens.Length && !foundParentId; j++)
+            {
+                if (m_processToChildrens.m_processesAndChildrens[i].m_childrens[j].m_childId.GetProcessId() == id)
+                {
+                    idParent = m_processToChildrens.m_processesAndChildrens[i].m_childrens[j].m_parentId.GetProcessId();
+                    foundParentId = true;
+                }
+            }
+        }
+
+        m_lastRefreshOfProcess.GetWith(out List<WindowIntPtrUtility.ProcessInformation> process);
+        foreach (var item in process)
+        {
+            if (item.m_processId == idParent)
+            {
+                current = item;
+                found = true;
+                return;
+            }
+        }
+        current = null;
+        found = false;
+    }
+
+    public void GetChildrenThatDisplay(IntPtrWrapGet intPtrWrapGet, out bool found, out IntPtrWrapGet pt)
+    {
+        WindowIntPtrUtility.FetchFirstChildrenThatHasDimension(intPtrWrapGet, out found, out pt);
+    }
 }
 
 [System.Serializable]
-public class GroupOfProcessesInfo {
-    [SerializeField]  List<WindowIntPtrUtility.ProcessInformation>
-        m_listOProcesses = new List<WindowIntPtrUtility.ProcessInformation>();
+public class GroupOfProcessesInfo
+{
+    [SerializeField]
+    List<WindowIntPtrUtility.ProcessInformation>
+        m_listOfProcesses = new List<WindowIntPtrUtility.ProcessInformation>();
 
-    public void SetWith(List<WindowIntPtrUtility.ProcessInformation> info) {
-        m_listOProcesses = info;
+    public void SetWith(List<WindowIntPtrUtility.ProcessInformation> info)
+    {
+        m_listOfProcesses = info;
     }
-    public void GetWith(out List<WindowIntPtrUtility.ProcessInformation> info) {
-        info = m_listOProcesses;
+    public void GetWith(out List<WindowIntPtrUtility.ProcessInformation> info)
+    {
+        info = m_listOfProcesses;
     }
 
 }
@@ -156,7 +212,7 @@ public class GroupOfProcessesPairParentToChildren
     public void AddFromId(int id)
     {
 
-        IntPtrWrapGet[] ps = WindowIntPtrUtility.GetProcessIdChildrenWindows(IntPtrTemp.Int(  id));
+        IntPtrWrapGet[] ps = WindowIntPtrUtility.GetProcessIdChildrenWindows(IntPtrTemp.Int(id));
         for (int i = 0; i < ps.Length; i++)
         {
             AddProcess(new ProcessIdChildrenPair(id, ps[i].GetAsInt()));
@@ -173,17 +229,17 @@ public class GroupOfProcessesParentToChildrens
     {
         m_processesAndChildrens.Add(process);
     }
-    public void AddFromId(int id, string debugName="")
+    public void AddFromId(int id, string debugName = "")
     {
 
-        IntPtrWrapGet[] ps = WindowIntPtrUtility.GetProcessIdChildrenWindows(IntPtrTemp.Int( id));
+        IntPtrWrapGet[] ps = WindowIntPtrUtility.GetProcessIdChildrenWindows(IntPtrTemp.Int(id));
         foreach (var item in ps)
         {
-        ProcessIdWithChildGroupInfo i = new ProcessIdWithChildGroupInfo(id, item.GetAsInt());
-        i.SetDebugName(debugName);
-        AddProcess(i);
+            ProcessIdWithChildGroupInfo i = new ProcessIdWithChildGroupInfo(id, item.GetAsInt());
+            i.SetDebugName(debugName);
+            AddProcess(i);
 
         }
-       
+
     }
 }

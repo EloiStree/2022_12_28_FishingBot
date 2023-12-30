@@ -13,13 +13,13 @@ public struct Action_Post_CursorInteraction : IUser32Action
 public struct Action_Post_CursorClick : IUser32Action
 {
     public IntPtrProcessId m_processId;
-    public User32KeyboardStrokeCodeEnum m_targetButton;
+    public User32MouseClassicButton m_targetButton;
 }
 [System.Serializable]
 public struct Action_Post_CursorClickWithDelay : IUser32Action
 {
     public IntPtrProcessId m_processId;
-    public User32KeyboardStrokeCodeEnum m_targetButton;
+    public User32MouseClassicButton m_targetButton;
     public float m_secondToMaintain;
 
 }

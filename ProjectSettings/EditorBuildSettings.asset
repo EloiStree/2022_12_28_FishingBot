@@ -20,4 +20,13 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/#WowCode/2022_04_25_ScreenToTextGPS/WowOuputTextFileToInGameDemo.unity
     guid: eb90aa7de790f0b4995bbb29b3fb438b
+  - enabled: 0
+    path: Assets/QuickFarmElementTest/QuickFarmTest.unity
+    guid: a806188d3f752ad439bbfe3d3f2d5039
+  - enabled: 1
+    path: Assets/2022_11_22_ZhuLi_KeyMouseAndFrameInteractionApply/Sleepy Scene Apply.unity
+    guid: 69bb0f4a2e9496144816519a3b0a9652
+  - enabled: 1
+    path: Assets/ReloadAppWithDelay.unity
+    guid: 0c1de2aaaddbda74db93adc0455e3424
   m_configObjects: {}

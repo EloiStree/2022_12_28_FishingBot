@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace Eloi { 
@@ -87,6 +88,15 @@ public class E_DebugLog
                 }
 
             }
+        }
+
+        public static void LogParams(in string between, params object[] givenParams)
+        {
+            Debug.Log(JoinObjectsAsString(between, givenParams));
+        }
+        public static string JoinObjectsAsString(in string between, params object[] givenParams)
+        {
+            return string.Join(between, givenParams.Select(k => k.ToString()));
         }
     }
 }

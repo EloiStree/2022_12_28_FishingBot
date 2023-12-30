@@ -46,6 +46,7 @@ public class Experiment_UdpMixerToFishingActions : MonoBehaviour
 
         NotifyAsUsed(processId);
         m_processToDoActionOn.Invoke(processId);
+        
     }
 
     private void NotifyAsUsed(int processId)
@@ -56,6 +57,7 @@ public class Experiment_UdpMixerToFishingActions : MonoBehaviour
             {
                 m_fishermen[i].m_muteWhenRecalling.Mute();
                 m_fishermen[i].m_resetIfNothing.ResetTimeToZero();
+                m_fishermen[i].m_debugLastRecall = DateTime.Now.ToString();
             }
         }
     }
@@ -105,6 +107,7 @@ public class Experiment_UdpMixerToFishingActions : MonoBehaviour
         public StringToBoolEvent m_udpToAction;
         public DoSomethingIfNothingHappened m_resetIfNothing;
         public AudioDelayMuteTrigger m_muteWhenRecalling;
+        public string m_debugLastRecall; 
 
        
     }

@@ -5,8 +5,8 @@ using UnityEngine;
 [System.Serializable]
 public class User32PercentPointRelative : IPercentPointGet
 {
-    public int m_xLeft2Right;
-    public int m_yTop2Down;
+    public float m_xLeft2Right;
+    public float m_yTop2Down;
 
     public void GetHorizontalDirection(out AxisDirectionHorizontal value)
     {

@@ -7,8 +7,6 @@ public class E_NativeWindowUtility
 {
 
 
-
-
     public static bool IsRunning(Process process)
     {
         return E_NativeWindowUtility_GetProcessInfo.IsRunningByExceptionCatch(process);

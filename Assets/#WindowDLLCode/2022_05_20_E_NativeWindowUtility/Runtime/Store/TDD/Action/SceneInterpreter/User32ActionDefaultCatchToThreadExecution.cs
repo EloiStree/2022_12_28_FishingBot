@@ -1,9 +1,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
-
-
+using static ThreadDateTimeActionUtility;
 
 public class User32ActionDefaultCatchToThreadExecution : User32ActionAbstractCatchToExecuteMono
 {
@@ -12,11 +12,16 @@ public class User32ActionDefaultCatchToThreadExecution : User32ActionAbstractCat
     public Eloi.StringClampHistory m_notManageHistory;
     public ThreadQueueDateTimeCallMono m_threadUsedForTime;
 
+    public String[] m_useableClassInProject;
 
     private void Awake()
     {
         m_receivedHistory.Clear();
         m_notManageHistory.Clear();
+    }
+    private void OnValidate()
+    {
+        m_useableClassInProject = E_ReflectionCS.GetEnumerableOfInterfaceThroughAssemblies<IUser32Action>().Select(k=>k.ToString()).ToArray();
     }
 
     public AccessWindowZoneWithoutStressOnUser32 m_accessWindowInfo;
@@ -49,7 +54,7 @@ public class User32ActionDefaultCatchToThreadExecution : User32ActionAbstractCat
     {
         if (m_threadUsedForTime == null)
             m_threadUsedForTime = ThreadQueueDateTimeCall.Instance;
-        m_threadUsedForTime.Add(new ThreadQueueDateTimeCallMono.DateTimeAction(specificTime, () => {
+        m_threadUsedForTime.Add(new DateTimeAction(specificTime, () => {
             TryToExecute(actionToExecute);
         }));
     }
@@ -57,7 +62,7 @@ public class User32ActionDefaultCatchToThreadExecution : User32ActionAbstractCat
     {
         if (m_threadUsedForTime == null)
             m_threadUsedForTime = ThreadQueueDateTimeCall.Instance;
-        m_threadUsedForTime.Add(new ThreadQueueDateTimeCallMono.DateTimeAction(specificTime, () => {
+        m_threadUsedForTime.Add(new DateTimeAction(specificTime, () => {
             if (actionToExecute != null) actionToExecute.Invoke();
         }));
     }
@@ -134,10 +139,179 @@ public class User32ActionDefaultCatchToThreadExecution : User32ActionAbstractCat
 
         else if (actionToExecute is Action_Real_SetCursor_OverProcess_PCT_LRTD)
         { Execute((Action_Real_SetCursor_OverProcess_PCT_LRTD)actionToExecute); }
+
+        else if (actionToExecute is Action_ResizeCurrentWindowToSquareZone_PX_LRDT)
+        { Execute((Action_ResizeCurrentWindowToSquareZone_PX_LRDT)actionToExecute); }
+        else if (actionToExecute is Action_ResizeCurrentWindowToNative_PX_LRTD)
+        { Execute((Action_ResizeCurrentWindowToNative_PX_LRTD)actionToExecute); }
+        else if (actionToExecute is Action_ResizeProcessWindowToSquareZone_PX_LRDT)
+        { Execute((Action_ResizeProcessWindowToSquareZone_PX_LRDT)actionToExecute); }
+        else if (actionToExecute is Action_ResizeProcessWindowToNative_PX_LRTD)
+        { Execute((Action_ResizeProcessWindowToNative_PX_LRTD)actionToExecute); }
+        else if (actionToExecute is Action_ResizeProcessWindowAroundPoint_PX_LRTD)
+        { Execute((Action_ResizeProcessWindowAroundPoint_PX_LRTD)actionToExecute); }
+        else if (actionToExecute is Action_ResizeCurrentWindowAroundPoint_PX_LRTD)
+        { Execute((Action_ResizeCurrentWindowAroundPoint_PX_LRTD)actionToExecute); }
+
+
+        else if (actionToExecute is Action_Real_SetCursor_OverDisplayID_PCT_LRTD)
+        { Execute((Action_Real_SetCursor_OverDisplayID_PCT_LRTD)actionToExecute); }
+        else if (actionToExecute is Action_Real_SetCursor_OverDisplayName_PCT_LRTD)
+        { Execute((Action_Real_SetCursor_OverDisplayName_PCT_LRTD)actionToExecute); }
+        else if (actionToExecute is Action_Real_SetCursor_OverDisplayName_PX_LRTD)
+        { Execute((Action_Real_SetCursor_OverDisplayName_PX_LRTD)actionToExecute); }
+        else if (actionToExecute is Action_Real_SetCursor_OverDisplayID_PX_LRTD)
+        { Execute((Action_Real_SetCursor_OverDisplayID_PX_LRTD)actionToExecute); }
+
+        else if (actionToExecute is Action_ShowProcessId)
+        { Execute((Action_ShowProcessId)actionToExecute); }
+
+        else if (actionToExecute is Action_HideProcessId)
+        { Execute((Action_HideProcessId)actionToExecute); }
+
         else { 
             if (m_useDebugHistory)
                 m_notManageHistory.PushIn(actionToExecute.GetType().ToString());
         }
+    }
+
+    private void Execute(Action_Real_SetCursor_OverDisplayID_PCT_LRTD actionToExecute)
+    {
+        WindowMonitorsInformationUtility.SearchMonitorFromId(actionToExecute.m_displayID,
+            out bool found,
+            out WindowMonitorRef monitor);
+        if (!found) return;
+        monitor.HasDimension(out bool hasDimension);
+        if (!hasDimension)
+            return;
+        monitor.GetNativeLeftRight(out int x);
+        monitor.GetNativeTopDown(out int y);
+        monitor.GetNativeHeight(out int h);
+        monitor.GetNativeWidth(out int w);
+        MouseOperations.SetCursorPosition(
+            x + (int)(actionToExecute.m_screenRelative.m_xLeft2Right * (float)w),
+            y + (int)(actionToExecute.m_screenRelative.m_yTop2Down * (float)h));
+    }
+    private void Execute(Action_Real_SetCursor_OverDisplayID_PX_LRTD actionToExecute)
+    {
+        WindowMonitorsInformationUtility.SearchMonitorFromId(actionToExecute.m_displayID,
+            out bool found,
+            out WindowMonitorRef monitor);
+        if (!found) return;
+        monitor.HasDimension(out bool hasDimension);
+        if (!hasDimension)
+            return;
+        monitor.GetNativeLeftRight(out int x);
+        monitor.GetNativeTopDown(out int y);
+        MouseOperations.SetCursorPosition(
+            x + (actionToExecute.m_screenRelative.m_xLeft2Right ),
+            y + (actionToExecute.m_screenRelative.m_yTop2Down ));
+    }
+    private void Execute(Action_Real_SetCursor_OverDisplayName_PCT_LRTD actionToExecute)
+    {
+        WindowMonitorsInformationUtility.SearchMonitorFromIdName(actionToExecute.m_displayNameID,
+            out bool found,
+            out WindowMonitorRef monitor);
+        if (!found) return;
+        monitor.HasDimension(out bool hasDimension);
+        if (!hasDimension)
+            return;
+        monitor.GetNativeLeftRight(out int x);
+        monitor.GetNativeTopDown(out int y);
+        monitor.GetNativeHeight(out int h);
+        monitor.GetNativeWidth(out int w);
+        MouseOperations.SetCursorPosition(
+            x +(int)( actionToExecute.m_screenRelative.m_xLeft2Right*(double)w),
+            y +(int)( actionToExecute.m_screenRelative.m_yTop2Down* (double)h));
+    }
+
+    private void Execute(Action_Real_SetCursor_OverDisplayName_PX_LRTD actionToExecute)
+    {
+        WindowMonitorsInformationUtility.SearchMonitorFromIdName(actionToExecute.m_displayNameID,
+            out bool found,
+            out WindowMonitorRef monitor);
+        if (!found) return;
+        monitor.HasDimension(out bool hasDimension);
+        if (!hasDimension)
+            return;
+        monitor.GetNativeLeftRight(out int x);
+        monitor.GetNativeTopDown(out int y);
+        monitor.GetNativeHeight(out int h);
+        monitor.GetNativeWidth(out int w);
+        MouseOperations.SetCursorPosition(
+            x + actionToExecute.m_screenRelative.m_xLeft2Right,
+            y + actionToExecute.m_screenRelative.m_yTop2Down);
+    }
+
+
+
+
+
+    private void Execute(Action_ResizeCurrentWindowAroundPoint_PX_LRTD actionToExecute)
+    {
+        WindowIntPtrUtility.GetCurrentProcessId(out IntPtrWrapGet id); 
+        WindowIntPtrUtility.MoveWindowAtCenter(
+            id,
+          actionToExecute.m_centerPoint,
+                      actionToExecute.m_width,
+                      actionToExecute.m_height);
+    }
+
+    private void Execute(Action_ResizeProcessWindowAroundPoint_PX_LRTD actionToExecute)
+    {
+        WindowIntPtrUtility.MoveWindowAtCenter(
+            actionToExecute.m_processId,
+          actionToExecute.m_centerPoint,
+                      actionToExecute.m_width, 
+                      actionToExecute.m_height);
+    }
+
+  
+    private void Execute(Action_ResizeCurrentWindowToSquareZone_PX_LRDT actionToExecute)
+    {
+        WindowIntPtrUtility.GetCurrentProcessId(out IntPtrWrapGet id);
+        WindowIntPtrUtility.MoveWindow(id,
+          actionToExecute.m_downLeftCorner,
+                      actionToExecute.m_topRightCorner);
+    }
+    private void Execute(Action_ResizeProcessWindowToSquareZone_PX_LRDT actionToExecute)
+    {
+        WindowIntPtrUtility.MoveWindow(actionToExecute.m_processId,
+           actionToExecute.m_downLeftCorner,
+                       actionToExecute.m_topRightCorner);
+    }
+
+    private void Execute(Action_ResizeCurrentWindowToNative_PX_LRTD actionToExecute)
+    {
+        WindowIntPtrUtility.GetCurrentProcessId(out IntPtrWrapGet id);
+        WindowIntPtrUtility.MoveWindow(id,
+           actionToExecute.m_startPoint.m_pixelLeft2Right,
+                       actionToExecute.m_startPoint.m_pixelTop2Bot,
+                                   actionToExecute.m_width,
+                                               actionToExecute.m_height, true);
+    }
+
+   
+
+    private void Execute(Action_ResizeProcessWindowToNative_PX_LRTD actionToExecute)
+    {
+        WindowIntPtrUtility.MoveWindow(actionToExecute.m_processId,
+            actionToExecute.m_startPoint.m_pixelLeft2Right,
+                        actionToExecute.m_startPoint.m_pixelTop2Bot,
+                                    actionToExecute.m_width,
+                                                actionToExecute.m_height,true);
+    }
+
+    private void Execute(Action_ShowProcessId actionToExecute)
+    {
+        WindowIntPtrUtility.ShowWindow(actionToExecute.m_processId,
+            WindowIntPtrUtility.WindowDisplayType.Show);
+    }
+
+    private void Execute(Action_HideProcessId actionToExecute)
+    {
+        WindowIntPtrUtility.ShowWindow(actionToExecute.m_processId,
+            WindowIntPtrUtility.WindowDisplayType.Hide);
     }
 
     private void Execute(Action_Real_KeyInteraction actionToExecute)
@@ -227,8 +401,8 @@ public class User32ActionDefaultCatchToThreadExecution : User32ActionAbstractCat
     private void Execute(Action_Real_SetCursor_OverProcess_PCT_LRTD actionToExecute)
     {
         this.GetWindowInfo(actionToExecute.m_processId, out DeductedInfoOfWindowSizeWithSource info);
-        info.m_frameSize.GetLeftToRightToAbsolute(actionToExecute.m_whereToMove.m_xLeft2Right, out int x);
-        info.m_frameSize.GetTopToBottomToAbsolute(actionToExecute.m_whereToMove.m_yTop2Down, out int y);
+        info.m_frameSize.GetLeftToRightToAbsolute((float)actionToExecute.m_whereToMove.m_xLeft2Right, out int x);
+        info.m_frameSize.GetTopToBottomToAbsolute((float)actionToExecute.m_whereToMove.m_yTop2Down, out int y);
         MouseOperations.SetCursorPosition(x, y);
     }
 
@@ -241,32 +415,61 @@ public class User32ActionDefaultCatchToThreadExecution : User32ActionAbstractCat
     }
     private void Execute(Action_Post_MoveCursor_PX_LRTD actionToExecute)
     {
-        throw new NotImplementedException();
+        this.GetWindowInfo(actionToExecute.m_processId, out DeductedInfoOfWindowSizeWithSource info);
+        info.m_frameSize.GetAbsoluteFromRelativePixelLeft2Right(actionToExecute.m_whereToMove.m_xLeft2Right, out int x);
+        info.m_frameSize.GetAbsoluteFromRelativePixelTop2Bot(actionToExecute.m_whereToMove.m_yTop2Down, out int y);
+        PostMouseUtility.MoveTo(actionToExecute.m_processId, x, y, false, true);
+          
     }
 
     private void Execute(Action_Post_MoveCursor_PCT_LRTD actionToExecute)
     {
-        throw new NotImplementedException();
+        this.GetWindowInfo(actionToExecute.m_processId, out DeductedInfoOfWindowSizeWithSource info);
+        info.m_frameSize.GetLeftToRightToAbsolute(actionToExecute.m_whereToMove.m_xLeft2Right
+            , out int x);
+        info.m_frameSize.GetTopToBottomToAbsolute(actionToExecute.m_whereToMove.m_yTop2Down
+            , out int y);
+        PostMouseUtility.MoveTo(actionToExecute.m_processId, x, y, false, true);
+
     }
+
 
     private void Execute(Action_Post_CursorClickWithDelay actionToExecute)
     {
-        throw new NotImplementedException();
+        MouseOperations.MouseEventFlags e =
+                 MouseOperationsUtility.GetTypeEventFrom(
+                     actionToExecute.m_targetButton, User32PressionType.Press);
+        MouseOperations.MouseEventFlags ee =
+               MouseOperationsUtility.GetTypeEventFrom(
+                   actionToExecute.m_targetButton, User32PressionType.Release);
+        MouseOperations.MouseEvent(e);
+        TryToExecute((int)(actionToExecute.m_secondToMaintain*1000f), () => MouseOperations.MouseEvent(ee) );
     }
 
     private void Execute(Action_Post_CursorClick actionToExecute)
     {
-        throw new NotImplementedException();
+        MouseOperations.MouseEventFlags e =
+               MouseOperationsUtility.GetTypeEventFrom(
+                   actionToExecute.m_targetButton, User32PressionType.Press);
+        MouseOperations.MouseEventFlags ee =
+               MouseOperationsUtility.GetTypeEventFrom(
+                   actionToExecute.m_targetButton, User32PressionType.Release);
+        MouseOperations.MouseEvent(e);
+        MouseOperations.MouseEvent(ee);
     }
 
     private void Execute(Action_Post_CursorInteraction actionToExecute)
     {
-        throw new NotImplementedException();
+        MouseOperations.MouseEventFlags e = 
+            MouseOperationsUtility.GetTypeEventFrom(
+                actionToExecute.m_targetButton,
+                actionToExecute.m_interactionType);
+        MouseOperations.MouseEvent(e);
     }
 
     private void Execute(Action_Post_KeyInteraction actionToExecute)
     {
-        throw new NotImplementedException();
+        User32KeyStrokeManager.SendKeyPostMessage( actionToExecute.m_processId,
+            actionToExecute.m_targetKey, actionToExecute.m_pressionType);
     }
-  
 }

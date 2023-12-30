@@ -6,6 +6,6 @@ using UnityEngine;
 public struct Action_Post_MoveCursor_PCT_LRTD : IUser32Action
 {
     public IntPtrProcessId m_processId;
-    public PercentPoint m_whereToMove;
+    public User32PercentPointRelative m_whereToMove;
 }
 

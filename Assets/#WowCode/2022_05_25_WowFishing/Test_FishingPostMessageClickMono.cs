@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class Test_FishingPostMessageClickMono : MonoBehaviour
 {
@@ -18,51 +19,41 @@ public class Test_FishingPostMessageClickMono : MonoBehaviour
         m_fishManager.m_fishingConfig.m_isActive = !m_fishManager.m_fishingConfig.m_isActive;
     }
 
-    public void SetMouseTypeAsRealMouse(bool useRealMouse)
+
+
+    public void SetTimeBetweenCameraMove(float timeInMs)
     {
-        if (useRealMouse)
-            SetMouseTypeAsRealMouse();
-        else
-            SetMouseTypeAsPostMessageMouse();
-    }
-    public void SetMouseTypeAsRealMouse() =>
-        m_fishManager.m_useRealMouse = true;
-
-    public void SetMouseTypeAsPostMessageMouse() =>
-        m_fishManager.m_useRealMouse = false;
-
-    public void SetNumberOfClick(int clickCount)
-    {
-        m_fishManager.m_fishingConfig.m_numberOfClick = clickCount;
-    }
-
-
-    public void SetPourcentScreenHorizontal(float percentHorizontal)
-    {
-        m_fishManager.m_fishingConfig.m_pourcentOfScreen = percentHorizontal;
-    }
-    public void SetPourcentVerticalBotToTop(float bot2TopPercent)
-    {
-        m_fishManager.m_fishingConfig.m_yBotToTop = bot2TopPercent;
-
-    }
-
-
-    public void SetTimeForFocus(float timeInMs)
-    {
-        m_fishManager.m_fishingConfig.m_timeToSwitchWindowMs = (int)timeInMs;
-    }
-    public void SetTimeBetweenClicks(float timeInMs)
-    {
-        m_fishManager.m_fishingConfig.m_timeBetweenClicksMs = (int)timeInMs;
+        m_fishManager.m_fishingConfig.m_timeBetweenCameraMoveMs = (int)timeInMs;
     }
     public void SetPressingTime(float timeInMs)
     {
-        m_fishManager.m_fishingConfig.m_timePressedClicksMs = (int)timeInMs;
+        m_fishManager.m_fishingConfig.m_timeBetweenPressMs = (int)timeInMs;
     }
-    public void SetBeforeTime(float timeInMs)
+    public void SetTimeBeforeLineRelaunch(float timeInMs)
     {
-        m_fishManager.m_fishingConfig.m_timeToLetFinishPreviousAction = (int)timeInMs;
+        m_fishManager.m_fishingConfig.m_timeBetweenLineRelaunchMs = (int)timeInMs;
+    }
+    public void SetTimeBetweenCameraMove(int timeInMs)
+    {
+        m_fishManager.m_fishingConfig.m_timeBetweenCameraMoveMs = (int)timeInMs;
+    }
+    public void SetPressingTime(int timeInMs)
+    {
+        m_fishManager.m_fishingConfig.m_timeBetweenPressMs = (int)timeInMs;
+    }
+    public void SetTimeBeforeLineRelaunch(int timeInMs)
+    {
+        m_fishManager.m_fishingConfig.m_timeBetweenLineRelaunchMs = (int)timeInMs;
+    }
+
+
+    public void SetRandomness(float rangeInMsToRandomize)
+    {
+        m_fishManager.m_fishingConfig.m_timeBetweenRandomRangeMs = (int)rangeInMsToRandomize;
+    }
+    public void SetRandomness(int rangeInMsToRandomize)
+    {
+        m_fishManager.m_fishingConfig.m_timeBetweenRandomRangeMs = (int)rangeInMsToRandomize;
     }
 
     public IntPtrTemp m_processTarget;
@@ -90,66 +81,78 @@ public class Test_FishingPostMessageClickMono : MonoBehaviour
         m_processTarget.Set(processId.GetAsInt());
         m_fishManager.RecovertTheLineThread(processId);
     }
+    public void LaunchTheLine(int processId)
+    {
+        LaunchTheLineWithProcess(IntPtrProcessId.Int(processId));
+    }
+    public void RecovertTheLineThread(int processId)
+    {
+       RecovertTheLineWithProcessId(IntPtrProcessId.Int(processId));
+    }
+    public UnityEvent m_onRecovertFishStart;
+    public void Update()
+    {
+        if (m_fishManager.m_notifyRecoveredLaneOnUnityThread) {
+            m_fishManager.m_notifyRecoveredLaneOnUnityThread = false;
+            m_onRecovertFishStart.Invoke();
+        }
+    }
 }
 
 
 [System.Serializable]
 public class FishingByPostMessageClicker
 {
+    public ThreadQueueDateTimeCallMono m_threadToSendActions;
     public Eloi.StringClampHistory m_acitonDebug = new StringClampHistory() { m_historySize = 50 };
     public FishingLineConfiguration m_fishingConfig = new FishingLineConfiguration();
+
+
     [System.Serializable]
     public class FishingLineConfiguration
     {
-        [Range(0f, 1f)]
-        public float m_yBotToTop = 0.5f;
-        [Range(0f, 1f)]
-        public float m_pourcentOfScreen = 0.7f;
-        [Range(1, 50)]
-        public int m_numberOfClick = 15;
-        public int m_timeBetweenClicksMs = 80;
-        public int m_timePressedClicksMs = 3;
-        public int m_timeToSwitchWindowMs = 150;
-        public int m_timeToLetFinishPreviousAction = 15;
-        public int m_moveInPrevisionAfterMs = 15;
+      
+        public int m_timeBetweenCameraMoveMs = 800;
+        public int m_timeBetweenPressMs = 80;
+        public int m_timeBetweenLineRelaunchMs = 500;
         public bool m_isActive = true;
+        internal int m_timeBetweenRandomRangeMs;
     }
 
-    public bool m_useRealMouse;
 
     [Header("Debug info")]
-    Left2RightPercent01 m_xLeftToRightRelative = new Left2RightPercent01();
-    Right2LeftPercent01 m_xRightToLeftRelative = new Right2LeftPercent01();
-    Bot2TopPercent01 m_yBotToTopRelative = new Bot2TopPercent01();
-    public DeductedInfoOfWindowSizeWithSource m_deductedInfoTarget;
-
     public long m_recallTimeInMs;
-    public bool m_useForground;
 
-    public User32PostMessageKeyEnum m_keyToFish;
+    public User32PostMessageKeyEnum m_keyToFish = User32PostMessageKeyEnum.VK_DIVIDE;
+    public User32PostMessageKeyEnum m_keyToInteract = User32PostMessageKeyEnum.VK_SUBTRACT;
     public string m_scriptToResetView = "/run SetView(1)";
     public string m_scriptToSaveView = "/run SaveView(1)";
-    public User32PostMessageKeyEnum m_keyToResetView= User32PostMessageKeyEnum.VK_HOME;
+    public User32PostMessageKeyEnum[] m_keyToResetView = new User32PostMessageKeyEnum[] { User32PostMessageKeyEnum.VK_F1 , User32PostMessageKeyEnum.VK_F2, User32PostMessageKeyEnum.VK_F3};
     public float m_randomJump = 0.05f;
+
+    public bool m_notifyRecoveredLaneOnUnityThread;
+    public bool m_notifyLineLaunchLaneOnUnityThread;
     public void LaunchTheLine(IntPtrWrapGet processId)
     {
+        if (processId.GetAsInt() == 0) return;
         if (m_fishingConfig.m_isActive)
         {
+            //m_lineLaunched.Invoke();
 
             Eloi.E_UnityRandomUtility.GetRandomN2M(0f, 1f, out float r);
             if (r < m_randomJump)
             {
-                ThreadQueueDateTimeCall.Instance.AddFromNowInMs(0, () =>
+                m_threadToSendActions.AddFromNowInMs(0, () =>
                 {
                     SendKeyMessageToWindows.SendKeyDown(User32PostMessageKeyEnum.VK_SPACE, processId, true);
                     SendKeyMessageToWindows.SendKeyUp(User32PostMessageKeyEnum.VK_SPACE, processId, true);
                 });
-                ThreadQueueDateTimeCall.Instance.AddFromNowInMs(900, () =>
+                m_threadToSendActions.AddFromNowInMs(900, () =>
                 {
                     m_acitonDebug.PushIn("Send Post Down ");
                     SendKeyMessageToWindows.SendKeyDown(m_keyToFish, processId, true);
                 });
-                ThreadQueueDateTimeCall.Instance.AddFromNowInMs(1000, () =>
+                m_threadToSendActions.AddFromNowInMs(1000, () =>
                 {
                     m_acitonDebug.PushIn("Send Post Up ");
                     SendKeyMessageToWindows.SendKeyUp(m_keyToFish, processId, true);
@@ -158,83 +161,74 @@ public class FishingByPostMessageClicker
             else
             {
 
-                ThreadQueueDateTimeCall.Instance.AddFromNowInMs(0, () => {
+                m_threadToSendActions.AddFromNowInMs(0, () => {
                     m_acitonDebug.PushIn("Send Post Down ");
                     SendKeyMessageToWindows.SendKeyDown(m_keyToFish, processId, true);
                 });
-                ThreadQueueDateTimeCall.Instance.AddFromNowInMs(10, () =>
+                m_threadToSendActions.AddFromNowInMs(10, () =>
                 {
                     m_acitonDebug.PushIn("Send Post Up ");
                     SendKeyMessageToWindows.SendKeyUp(m_keyToFish, processId, true);
                 });
             }
+            m_notifyLineLaunchLaneOnUnityThread = true;
         }
     }
-    public User32RelativePixelPointLRTB[] m_points;
+    
     public void RecovertTheLineThread(IntPtrWrapGet processId)
     {
         if (m_fishingConfig.m_isActive)
         {
 
 
-            FetchWindowInfoUtility.Get(processId, out m_deductedInfoTarget);
-            m_yBotToTopRelative.SetPercent(m_fishingConfig.m_yBotToTop);
-            m_xLeftToRightRelative.SetPercent((1f - m_fishingConfig.m_pourcentOfScreen) / 2f);
-            m_xRightToLeftRelative.SetPercent((1f - m_fishingConfig.m_pourcentOfScreen) / 2f);
+            FetchWindowInfoUtility.Get(processId, out DeductedInfoOfWindowSizeWithSource m_deductedInfoTarget);
+            //m_yBotToTopRelative.SetPercent(m_fishingConfig.m_yBotToTop);
+            //m_xLeftToRightRelative.SetPercent((1f - m_fishingConfig.m_pourcentOfScreen) / 2f);
+            //m_xRightToLeftRelative.SetPercent((1f - m_fishingConfig.m_pourcentOfScreen) / 2f);
 
-            User32WindowRectUtility.HorizontalLineLeftRightClick(in m_deductedInfoTarget,
-                m_yBotToTopRelative,
-                m_xLeftToRightRelative,
-                m_xRightToLeftRelative,
-                m_fishingConfig.m_numberOfClick,
-                out m_points
-                 );
+            //User32WindowRectUtility.HorizontalLineLeftRightClick(in m_deductedInfoTarget,
+            //    m_yBotToTopRelative,
+            //    m_xLeftToRightRelative,
+            //    m_xRightToLeftRelative,
+            //    m_fishingConfig.m_numberOfClick,
+            //    out m_points
+            //     );
 
-            User32RelativePointsActionPusher.PointsListOfPressReleaseActions(
-                m_deductedInfoTarget.m_pointer,
-                StartTheWatch,
-                LeftClickDown,
-                LeftClickUp,
-                MoveTo,
-                StopTheWatch,
-                m_points,
+            //User32RelativePointsActionPusher.PointsListOfPressReleaseActions(
+            //    m_deductedInfoTarget.m_pointer,
+            //    m_threadToSendActions,
+            //    StartTheWatch,
+            //    LeftClickDown,
+            //    LeftClickUp,
+            //    MoveTo,
+            //    StopTheWatch,
+            //    m_points,
+            //    out int msAtEnd,
+            //    m_fishingConfig.m_timeToSwitchWindowMs,
+            //    m_fishingConfig.m_timeBetweenClicksMs,
+            //    m_fishingConfig.m_timePressedClicksMs,
+            //    m_fishingConfig.m_timeToLetFinishPreviousAction,
+            //    m_fishingConfig.m_moveInPrevisionAfterMs
+            //    ); ;;
+
+            User32RelativePointsActionPusher.RecovertFishWithAutoInteract(
+               m_deductedInfoTarget.m_pointer,
+                m_threadToSendActions,
+                m_keyToFish,
+                m_keyToInteract,
+                m_keyToResetView,
                 out int msAtEnd,
-                m_fishingConfig.m_timeToSwitchWindowMs,
-                m_fishingConfig.m_timeBetweenClicksMs,
-                m_fishingConfig.m_timePressedClicksMs,
-                m_fishingConfig.m_timeToLetFinishPreviousAction,
-                m_fishingConfig.m_moveInPrevisionAfterMs
-                ); ;;
+                m_fishingConfig.m_timeBetweenCameraMoveMs,
+                m_fishingConfig.m_timeBetweenPressMs,
+                m_fishingConfig.m_timeBetweenLineRelaunchMs,
+                m_fishingConfig.m_timeBetweenRandomRangeMs
+                );
+
+            m_notifyRecoveredLaneOnUnityThread = true;
         }
     }
 
-    private void MoveTo(IntPtrWrapGet pointer, User32RelativePixelPointLRTB point)
-    {
-        if (m_fishingConfig.m_isActive)
-        {
-
-            if (m_useRealMouse)
-            {
-
-                m_deductedInfoTarget.m_frameSize.GetAbsoluteFromRelativePixelLeft2Right(point.m_pixelLeft2Right, out int x);
-                m_deductedInfoTarget.m_frameSize.GetAbsoluteFromRelativePixelTop2Bot(point.m_pixelTop2Bot, out int y);
-                m_px = x;
-                m_py = y;
-
-                m_acitonDebug.PushIn("Move Mouse A "+x+" "+y);
-                MouseOperations.SetCursorPosition( x, y);
-                
-            }
-            else
-            {
-                m_acitonDebug.PushIn("Move Post R "+ point.m_pixelLeft2Right + " "+ point.m_pixelTop2Bot);
-                PostMouseUtility.MoveTo(
-                         pointer, point.m_pixelLeft2Right
-                         , point.m_pixelTop2Bot, false,true);
-               
-            }
-        }
-    }
+   
 
     private Stopwatch m_watch;
 
@@ -254,50 +248,38 @@ public class FishingByPostMessageClicker
     {
         if (m_fishingConfig.m_isActive)
         {
-
-           
             {
 
-                ThreadQueueDateTimeCall.Instance.AddFromNowInMs(0, () => {
-                    m_acitonDebug.PushIn("Send Post Down ");
-                    SendKeyMessageToWindows.SendKeyDown(m_keyToResetView, processId, true);
-                });
-                ThreadQueueDateTimeCall.Instance.AddFromNowInMs(10, () =>
-                {
-                    m_acitonDebug.PushIn("Send Post Up ");
-                    SendKeyMessageToWindows.SendKeyUp(m_keyToResetView, processId, true);
-                });
+                //m_threadToSendActions.AddFromNowInMs(0, () => {
+                //    m_acitonDebug.PushIn("Send Post Down ");
+                //    SendKeyMessageToWindows.SendKeyDown(m_keyToResetView, processId, true);
+                //});
+                //m_threadToSendActions.AddFromNowInMs(10, () =>
+                //{
+                //    m_acitonDebug.PushIn("Send Post Up ");
+                //    SendKeyMessageToWindows.SendKeyUp(m_keyToResetView, processId, true);
+                //});
 
                 if (m_scriptToResetView.Length > 0) {
 
 
-                    ThreadQueueDateTimeCall.Instance.AddFromNowInMs(200, () =>
+                    m_threadToSendActions.AddFromNowInMs(200, () =>
                     {
-
-                        if (m_useRealMouse)
-                            SendKeyStrokeToComputerDLL.KeyPressAndRelease(User32KeyboardStrokeCodeEnum.ENTER);
-                        else
                             SendKeyMessageToWindows.SendKeyClick(User32PostMessageKeyEnum.VK_ACCEPT, processId, true);
 
                     });
 
 
-                    ThreadQueueDateTimeCall.Instance.AddFromNowInMs(250 ,() =>
+                    m_threadToSendActions.AddFromNowInMs(250 ,() =>
                     {
                         m_acitonDebug.PushIn("Copy past ");
                         User32ClipboardUtility.CopyTextToClipboard(m_scriptToResetView);
 
-                        if (m_useRealMouse)
-                            SendKeyStrokeToComputerDLL.Past(true);
-                        else SendKeyMessageToWindows.RequestPastActionBroadcast(processId, true);
+                         SendKeyMessageToWindows.RequestPastActionBroadcast(processId, true);
 
                     });
-                    ThreadQueueDateTimeCall.Instance.AddFromNowInMs(300, () =>
+                    m_threadToSendActions.AddFromNowInMs(300, () =>
                     {
-
-                        if (m_useRealMouse)
-                            SendKeyStrokeToComputerDLL.KeyPressAndRelease(User32KeyboardStrokeCodeEnum.ENTER);
-                        else
                             SendKeyMessageToWindows.SendKeyClick(User32PostMessageKeyEnum.VK_ACCEPT, processId, true);
 
                     });
@@ -308,78 +290,6 @@ public class FishingByPostMessageClicker
             }
         }
     }
-
-    public int m_px, m_py;
-    public int m_nx, m_ny;
-    private void LeftClickDown(IntPtrWrapGet pointer, User32RelativePixelPointLRTB point)
-    {
-        if (m_fishingConfig.m_isActive)
-        {
-
-            if (m_useRealMouse)
-            {
-
-                m_deductedInfoTarget.m_frameSize.GetAbsoluteFromRelativePixelLeft2Right(point.m_pixelLeft2Right, out int x);
-                m_deductedInfoTarget.m_frameSize.GetAbsoluteFromRelativePixelTop2Bot(point.m_pixelTop2Bot, out int y);
-                m_px = x;
-                m_py = y;
-
-                m_acitonDebug.PushIn("Send Mouse Down ");
-                MouseOperations.MouseEvent(MouseOperations.MouseEventFlags.LeftDown,x,y);
-                if (m_fishingConfig.m_timePressedClicksMs <= 0f)
-                {
-                    MouseOperations.MouseEvent(MouseOperations.MouseEventFlags.LeftUp,x,y);
-                    m_acitonDebug.PushIn("Send Mouse UP Direct ");
-                }
-            }
-            else
-            {
-                m_acitonDebug.PushIn("Send Post Down ");
-                PostMouseUtility.SendMouseLeftDownDirect(
-                         pointer, point.m_pixelLeft2Right
-                         , point.m_pixelTop2Bot, false);
-                if (m_fishingConfig.m_timePressedClicksMs <= 0f)
-                {
-                    PostMouseUtility.SendMouseLeftUpDirect(
-                             pointer, point.m_pixelLeft2Right
-                             , point.m_pixelTop2Bot, false);
-                    m_acitonDebug.PushIn("Send Post UP Direct ");
-                }
-            }
-        }
-    }
-
-    private void LeftClickUp(IntPtrWrapGet pointer, User32RelativePixelPointLRTB point)
-    {
-        if (m_fishingConfig.m_isActive)
-        {
-
-            if (m_fishingConfig.m_timePressedClicksMs > 0f)
-            {
-                if (m_useRealMouse)
-                {
-
-                    m_acitonDebug.PushIn("Send Mouse Up ");
-                    m_deductedInfoTarget.m_frameSize.GetAbsoluteFromRelativePixelLeft2Right(point.m_pixelLeft2Right, out int x);
-                    m_deductedInfoTarget.m_frameSize.GetAbsoluteFromRelativePixelTop2Bot(point.m_pixelTop2Bot, out int y);
-                    m_nx = x;
-                    m_ny = y;
-                    if (m_px != m_nx || m_py != m_ny)
-                        throw new Exception("Aha !!!");
-
-                    MouseOperations.MouseEvent(MouseOperations.MouseEventFlags.LeftUp, x,y);
-                }
-                else
-                {
-                    m_acitonDebug.PushIn("Send Post up  Direct ");
-                    PostMouseUtility.SendMouseLeftUpDirect(
-                             pointer, point.m_pixelLeft2Right
-                             , point.m_pixelTop2Bot, false);
-                }
-            }
-        }
-    }
-
 
     private void StartTheWatch(IntPtrWrapGet pointer)
     {
@@ -401,14 +311,18 @@ public class User32RelativePointsActionPusher
     private readonly static object threadLock = new object();
     public delegate void MouseActionBasedOnRelativePoints(IntPtrWrapGet pointer, User32RelativePixelPointLRTB point);
     public delegate void MouseActionBasedOnRelativeKey(IntPtrWrapGet pointer);
+    public delegate void KeyPostAction(IntPtrWrapGet pointer, User32PostMessageKeyEnum postKey, float timeBetweenSeconds);
+
     public static void PointsListOfPressReleaseActions(
         IntPtrWrapGet pointer,
+        ThreadQueueDateTimeCallMono threadToUse,
         MouseActionBasedOnRelativeKey toDoAtTheStart,
         MouseActionBasedOnRelativePoints actionDown,
         MouseActionBasedOnRelativePoints actionUp,
         MouseActionBasedOnRelativePoints moveTo,
         MouseActionBasedOnRelativeKey toDoAtTheEnd,
         User32RelativePixelPointLRTB[] points,
+        
         out int msCountAtEnd,
         int forgroundMsWait = 150,
         int betweenActionMsWait = 90,
@@ -416,66 +330,180 @@ public class User32RelativePointsActionPusher
         int tempTimeBeforeStartMs = 0,
         int previsionMoveAfter = 30,
         bool useForgroundAtStart = true
+        
         )
     {
-        lock (threadLock) 
-        { 
-        int ms = tempTimeBeforeStartMs;
-        if (useForgroundAtStart)
+        lock (threadLock)
         {
-            ThreadQueueDateTimeCall.Instance.AddFromNowInMs(ms, () => {
-                WindowIntPtrUtility.SetForegroundWindow(pointer);
-            });
-
-            ms += forgroundMsWait;
-        }
-
-        if (toDoAtTheStart != null)
-            ThreadQueueDateTimeCall.Instance.AddFromNowInMs(ms, () => {
-                toDoAtTheStart(pointer);
-            });
-        for (int i = 0; i < points.Length; i++)
+            int ms = tempTimeBeforeStartMs;
+            if (useForgroundAtStart)
             {
-            User32RelativePixelPointLRTB p = new User32RelativePixelPointLRTB(points[i].m_pixelLeft2Right, points[i].m_pixelTop2Bot);
+                threadToUse.AddFromNowInMs(ms, () => {
+                    WindowIntPtrUtility.SetForegroundWindow(pointer);
+                });
+
+                ms += forgroundMsWait;
+            }
+
+            if (toDoAtTheStart != null)
+                threadToUse.AddFromNowInMs(ms, () => {
+                    toDoAtTheStart(pointer);
+                });
+            for (int i = 0; i < points.Length; i++)
+            {
+                User32RelativePixelPointLRTB p = new User32RelativePixelPointLRTB(points[i].m_pixelLeft2Right, points[i].m_pixelTop2Bot);
 
                 if (i == 0)
                 {
                     ms += (previsionMoveAfter);
-                    ThreadQueueDateTimeCall.Instance.AddFromNowInMs(ms, () => {
+                    threadToUse.AddFromNowInMs(ms, () => {
                         if (moveTo != null)
                             moveTo(pointer, p);
                     });
                     ms += (previsionMoveAfter);
                 }
 
+                ms += betweenActionMsWait;
+                threadToUse.AddFromNowInMs(ms, () => {
+                    if (actionDown != null)
+                        actionDown(pointer, p);
+                });
+                ms += pressActionMsWait;
+                threadToUse.AddFromNowInMs(ms, () => {
+                    if (actionUp != null)
+                        actionUp(pointer, p);
+                });
+                ms += (previsionMoveAfter);
+                threadToUse.AddFromNowInMs(ms, () => {
+                    if (moveTo != null)
+                        moveTo(pointer, p);
+                });
+                ms += (previsionMoveAfter);
+
+
+            }
             ms += betweenActionMsWait;
-            ThreadQueueDateTimeCall.Instance.AddFromNowInMs(ms, () => {
-                if (actionDown != null)
-                    actionDown(pointer, p);
-            });
-            ms += pressActionMsWait;
-            ThreadQueueDateTimeCall.Instance.AddFromNowInMs(ms, () => {
-                if (actionUp != null)
-                    actionUp(pointer, p);
-            });
-            ms +=  (previsionMoveAfter);
-            ThreadQueueDateTimeCall.Instance.AddFromNowInMs(ms, () => {
-                if (moveTo != null)
-                    moveTo(pointer, p);
-            });
-            ms += (previsionMoveAfter );
+        
+            if (useForgroundAtStart)
+            {
+                ms += forgroundMsWait;
+                threadToUse.AddFromNowInMs(ms, () => {
+                    WindowIntPtrUtility.SetForegroundWindow(pointer);
+                });
 
+                ms += forgroundMsWait;
+            }
+            ms += betweenActionMsWait;
+            if (toDoAtTheEnd != null)
+                threadToUse.AddFromNowInMs(ms, () => {
 
-        }
-        ms += betweenActionMsWait;
-        if (toDoAtTheEnd != null)
-            ThreadQueueDateTimeCall.Instance.AddFromNowInMs(ms, () => {
-
-                toDoAtTheEnd(pointer);
-            });
-        msCountAtEnd = ms;
+                    toDoAtTheEnd(pointer);
+                });
+            msCountAtEnd = ms;
         }
 
+    }
+
+    internal static void RecovertFishWithAutoInteract(
+        IntPtrWrapGet pointer,
+        ThreadQueueDateTimeCallMono threadToUse,
+        User32PostMessageKeyEnum fishSendLineKey,
+        User32PostMessageKeyEnum fishInteractKey,
+        User32PostMessageKeyEnum [] cameraViewKey,
+
+        out int msCountAtEnd,
+        int timeBetweenCameraMoveMs = 250,
+        int timeBetweenPressMs = 10,
+        int timeBeforeRelaunchLineMs = 150,
+        int randomnessBetweenActionsRange = 20
+        )
+    {
+       // WindowIntPtrUtility.SetForegroundWindow(pointer);
+        msCountAtEnd = 0;
+        {
+            lock (threadLock)
+            {
+                int ms = 0;
+
+                for (int i = 0; i < cameraViewKey.Length; i++)
+                {
+
+
+                    threadToUse.AddFromNowInMs(ms, () =>
+                    {
+
+                        User32KeyStrokeManager.SendKeyPostMessage(pointer, fishInteractKey, User32PressionType.Press);
+                    });
+                    ms += timeBetweenPressMs;
+
+                    ms += UnityEngine.Random.Range(0, randomnessBetweenActionsRange);
+
+                    threadToUse.AddFromNowInMs(ms, () =>
+                    {
+
+                        User32KeyStrokeManager.SendKeyPostMessage(pointer, fishInteractKey, User32PressionType.Release);
+                    });
+                    ms += 5;
+
+                    PressKeyView(pointer, threadToUse, cameraViewKey[i], ms);
+                    ms += timeBetweenPressMs;
+                    ms += UnityEngine.Random.Range(0, randomnessBetweenActionsRange);
+                    ReleaseKeyView(pointer, threadToUse, cameraViewKey[i], ms);
+
+                    ms += (timeBetweenCameraMoveMs);
+                    threadToUse.AddFromNowInMs(ms, () =>
+                    {
+                        User32KeyStrokeManager.SendKeyPostMessage(pointer, fishInteractKey, User32PressionType.Press);
+                    });
+                    ms += UnityEngine.Random.Range(0, randomnessBetweenActionsRange);
+                    ms += timeBetweenPressMs;
+                    threadToUse.AddFromNowInMs(ms, () =>
+                    {
+                        User32KeyStrokeManager.SendKeyPostMessage(pointer, fishInteractKey, User32PressionType.Release);
+                    });
+                    ms += 5;
+
+                }
+
+                ms += UnityEngine.Random.Range(0, randomnessBetweenActionsRange);
+                ms += timeBeforeRelaunchLineMs;
+
+                threadToUse.AddFromNowInMs(ms, () => {
+                    User32KeyStrokeManager.SendKeyPostMessage(pointer, fishSendLineKey, User32PressionType.Press);
+                });
+                ms += timeBetweenPressMs;
+                threadToUse.AddFromNowInMs(ms, () => {
+                    User32KeyStrokeManager.SendKeyPostMessage(pointer, fishSendLineKey, User32PressionType.Release);
+                });
+                ms += 5;
+
+                msCountAtEnd = ms;
+
+            }
+
+        }
+
+    }
+
+    private static void ReleaseKeyView(IntPtrWrapGet pointer, ThreadQueueDateTimeCallMono threadToUse, User32PostMessageKeyEnum cameraViewKey, int ms)
+    {
+        threadToUse.AddFromNowInMs(ms, () =>
+        {
+            User32KeyStrokeManager.SendKeyPostMessage(pointer, cameraViewKey, User32PressionType.Release);
+        });
+    }
+
+    private static void PressKeyView(IntPtrWrapGet pointer, ThreadQueueDateTimeCallMono threadToUse, User32PostMessageKeyEnum cameraViewKey, int ms)
+    {
+        threadToUse.AddFromNowInMs(ms, () =>
+        {
+            User32KeyStrokeManager.SendKeyPostMessage(pointer, cameraViewKey, User32PressionType.Press);
+        });
+    }
+
+    internal static void RecovertFishWithAutoInteract(IntPtrWrapGet m_pointer, ThreadQueueDateTimeCallMono m_threadToSendActions, User32PostMessageKeyEnum m_keyToFish, User32PostMessageKeyEnum m_keyToInteract, User32PostMessageKeyEnum[] m_keyToResetView, out int msAtEnd, object m_timeBetweenCameraMove, object m_timeBetweenPress, object m_timeBetweenLineRelaunch)
+    {
+        throw new NotImplementedException();
     }
 }
 

@@ -25,6 +25,7 @@ public class Test_RadiusSpamClickMono : MonoBehaviour
     [System.Serializable]
     public class RadiusSpammingClick {
 
+        public ThreadQueueDateTimeCallMono m_threadToExecute;
         public Eloi.Left2RightPercent01 m_left2Right = new Eloi.Left2RightPercent01(0.5f);
         public Eloi.Bot2TopPercent01 m_bot2Top= new Eloi.Bot2TopPercent01(0.5f);
         public Eloi.Percent01 m_radiusPercent = new Eloi.Percent01(0.1f);
@@ -66,7 +67,7 @@ public class Test_RadiusSpamClickMono : MonoBehaviour
                 );
 
             User32RelativePointsActionPusher.PointsListOfPressReleaseActions(
-                processId
+                processId, m_threadToExecute
                 , null,
                 (IntPtrWrapGet p, User32RelativePixelPointLRTB pt) =>
                 {

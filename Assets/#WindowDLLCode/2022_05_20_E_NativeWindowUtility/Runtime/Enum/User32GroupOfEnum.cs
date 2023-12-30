@@ -130,6 +130,7 @@ public enum User32PostMessageKeyEnum : int
     VK_F21 = 0x84,
     VK_F22 = 0x85,
     VK_F23 = 0x86,
+    VK_F24 = 0x87,
     VK_NUMLOCK = 0x90,
     VK_SCROLL = 0x91,
     VK_LSHIFT = 0xA0,
@@ -252,9 +253,11 @@ public enum User32KeyboardStrokeCodeEnum : ushort
     // see https://lists.w3.org/Archives/Public/www-dom/2010JulSep/att-0182/keyCode-spec.html
     OEM_COLON = 0xba, // OEM_1
     OEM_102 = 0xe2,
+    OEM_1 = 0xba,
     OEM_2 = 0xbf,
     OEM_3 = 0xc0,
     OEM_4 = 0xdb,
+    OEM_5 = 0xdc,
     OEM_BACK_SLASH = 0xdc, // OEM_5
     OEM_6 = 0xdd,
     OEM_7 = 0xde,
@@ -310,7 +313,8 @@ public enum User32KeyboardStrokeCodeEnum : ushort
     VOLUME_DOWN = 0xae,
     VOLUME_UP = 0xaf,
     #endregion
-
+    LMENU 	=0xA4 	,
+RMENU =	0xA5,
     SNAPSHOT = 0x2c,
     RIGHT_CLICK = 0x5d,
     BACKSPACE = 8,
@@ -344,5 +348,9 @@ public enum User32KeyboardStrokeCodeEnum : ushort
     SHIFT = 0x10,
     SPACE_BAR = 0x20,
     TAB = 9,
-    UP = 0x26,
+    UP = 0x26, 
+    APPSMENU =	0x5D,
+    SLEEP =	0x5F,
+    PRINT = 0x2A,
+     PAUSE =	0x13
 }

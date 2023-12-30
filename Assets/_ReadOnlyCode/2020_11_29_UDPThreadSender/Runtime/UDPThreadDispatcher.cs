@@ -22,6 +22,8 @@ public class UDPThreadDispatcher : MonoBehaviour
     public UdpClient m_listener;
     public IPEndPoint m_ipEndPoint;
     public bool m_hasBeenKilled;
+    [TextArea(0,5)]
+    public string m_errorHappend;
 
     public bool m_useAwakeInit;
     private void Awake()
@@ -39,8 +41,6 @@ public class UDPThreadDispatcher : MonoBehaviour
             m_threadListener = new Thread(ChechUdpClientMessageInComing);
             m_threadListener.Priority = m_threadPriority;
             m_threadListener.Start();
-        
-       
     }
 
  
@@ -82,9 +82,18 @@ public class UDPThreadDispatcher : MonoBehaviour
    
 
     public void PushOnUnityThreadMessage() {
-        while (m_receivedMessages.Count > 0) { 
+        while (m_receivedMessages.Count > 0)
+        {
             m_lastReceived = m_receivedMessages.Dequeue();
-            m_messageReceived.Invoke(m_lastReceived);
+            try
+            {
+                m_messageReceived.Invoke(m_lastReceived);
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning("Error happend following: " + m_lastReceived+"\n"+e.StackTrace);
+
+            }
         }
     }
 
@@ -96,7 +105,7 @@ public class UDPThreadDispatcher : MonoBehaviour
         }
         if (m_listener == null) { 
             m_listener = new UdpClient(m_portId);
-            m_ipEndPoint = new IPEndPoint(IPAddress.Any, 0);
+            m_ipEndPoint = new IPEndPoint(IPAddress.Any, m_portId);
         }
        
 
@@ -105,15 +114,17 @@ public class UDPThreadDispatcher : MonoBehaviour
             {
 
                 Byte[] receiveBytes = m_listener.Receive(ref m_ipEndPoint);
-                string returnData = Encoding.UTF8.GetString(receiveBytes);
+                string returnData = Encoding.Unicode.GetString(receiveBytes);
                 m_receivedMessages.Enqueue(returnData);
                 //RemoteIpEndPoint.Address.ToString() --  RemoteIpEndPoint.Port.ToString());
             }
             catch (Exception e)
             {
-               Debug.Log(e.ToString());
                 m_wantThreadAlive = false;
+                m_errorHappend = e.StackTrace;
+                Debug.LogError(e.StackTrace);
             }
+            //Thread.Sleep(1);
         }
     }
 

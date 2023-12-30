@@ -24,6 +24,10 @@ public class DelayTick : MonoBehaviour
         if (m_onEnable) LaunchDelayedTick();
     }
 
+    public void SetTimeInSeconds(float seconds) {
+        m_timeWhenToTick = seconds;
+    }
+
     [ContextMenu("LaunchDelayedTick")]
     public void LaunchDelayedTick()
     {

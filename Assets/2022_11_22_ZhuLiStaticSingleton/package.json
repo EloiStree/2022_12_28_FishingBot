@@ -1,0 +1,23 @@
+
+{                                                                                
+  "name": "be.eloistree.zhulistaticsingleton",                              
+  "displayName": "Zhu Li Static Singleton",                        
+  "version": "0.0.1",                         
+  "unity": "2018.1",                             
+  "unityRelease": "",                             
+  "description": "Just a tool that allows to send struct or class that just containt data to Zhu Li and let's the next developer (lot's of chance that it will be you) deal with the rest later. ",                         
+  "keywords": ["Script","Tool"],                       
+  "dependencies":{},     
+  "relatedPackages":{},     
+  "samples" : [],     
+  "author" : {
+"name":"Eloi Stree",
+"mail":"eloistree@gmail.com",
+"url":"https://github.com/EloiStree/"},     
+  "repository":{
+"type":"Git",
+"url":"https://github.com/EloiStree/2022_11_22_ZhuLiStaticSingleton.git",
+"footprint":"",
+"revision":""},     
+  "category": "Script"                   
+} 

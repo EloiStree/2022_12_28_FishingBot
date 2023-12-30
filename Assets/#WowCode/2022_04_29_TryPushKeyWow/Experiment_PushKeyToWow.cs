@@ -31,7 +31,7 @@ public class Experiment_PushKeyToWow : MonoBehaviour
 
 public class SendKeyMessageToWindows
 {
- 
+
 
 
     #region CONST
@@ -41,11 +41,12 @@ public class SendKeyMessageToWindows
 
 
 
-    public class Utility {
+    public class Utility
+    {
 
         public static void FindWindowParentProcess(string windowName, out
     IntPtrWrapGet found)
-            => WindowIntPtrUtility. FindWindow(null, windowName, out found);
+            => WindowIntPtrUtility.FindWindow(null, windowName, out found);
         public static void FindChildrenOf(
     IntPtrWrapGet pointer, out List<
     IntPtrWrapGet> found)
@@ -66,26 +67,26 @@ public class SendKeyMessageToWindows
     /// </summary>
 
 
-    public static void SendKeyDown( User32PostMessageKeyEnum Key, in IntPtrWrapGet target, in bool usePost)
+    public static void SendKeyDown(User32PostMessageKeyEnum Key, in IntPtrWrapGet target, in bool usePost)
     {
-        if(usePost)
-            WindowIntPtrUtility.PostMessage(target, WM_KEYDOWN,(int) Key, 0);
+        if (usePost)
+            WindowIntPtrUtility.PostMessage(target, WM_KEYDOWN, (int)Key, 0);
         else WindowIntPtrUtility.SendMessage(target, WM_KEYDOWN, (int)Key, 0);
     }
 
     public static void SendKeyUp(User32PostMessageKeyEnum Key, in IntPtrWrapGet target, in bool usePost)
     {
-        if(usePost)
+        if (usePost)
             WindowIntPtrUtility.PostMessage(target, WM_KEYUP, (int)Key, 0);
         else WindowIntPtrUtility.SendMessage(target, WM_KEYUP, (int)Key, 0);
     }
 
 
-    internal static void SendKeyDownToProcessChildren(User32PostMessageKeyEnum Key, IntPtrWrapGet processId, in bool usePost=true)
+    internal static void SendKeyDownToProcessChildren(User32PostMessageKeyEnum Key, IntPtrWrapGet processId, in bool usePost = true)
     {
-        IntPtrWrapGet [] prs = WindowIntPtrUtility. GetProcessIdChildrenWindows(processId);
+        IntPtrWrapGet[] prs = WindowIntPtrUtility.GetProcessIdChildrenWindows(processId);
         if (prs.Length <= 0) return;
-        IntPtrWrapGet pr = prs[0]; 
+        IntPtrWrapGet pr = prs[0];
         foreach (IntPtrWrapGet p in prs)
         {
             SendKeyDown(Key, in processId, in usePost);
@@ -123,11 +124,11 @@ public class SendKeyMessageToWindows
         int width = 900;
         int height = 900;
         int x = (int)(height * (1f - b2tPct));
-        int y = (int)(width * ( l2rPct));
+        int y = (int)(width * (l2rPct));
 
         SendMouseLeftUp(processId, x, y);
     }
-   
+
     //[DllImport("user32.dll")]
     //static extern bool ScreenToClient(IntPtr hWnd, ref POINT lpPoint);
 
@@ -136,9 +137,9 @@ public class SendKeyMessageToWindows
     {
         //https://stackoverflow.com/a/11161632/13305320
         //https://stackoverflow.com/questions/46306860/i-want-to-send-mouse-click-with-sendmessage-but-its-not-working-what-wrong-wit
-        return ((y << 16) |  (x & 0xFFFF));
+        return ((y << 16) | (x & 0xFFFF));
     }
-    
+
     public const uint WM_LBUTTONDOWN = 0x201; //Left mousebutton down
     public const uint WM_LBUTTONUP = 0x202;   //Left mousebutton up
     public const uint WM_LBUTTONDBLCLK = 0x203; //Left mousebutton doubleclick
@@ -167,7 +168,7 @@ public class SendKeyMessageToWindows
         {
             IntPtr lParam = (IntPtr)((y << 16) | x);
             IntPtr wParam = IntPtr.Zero;
-           WindowIntPtrUtility. PostMessage(p, (uint)WM_LBUTTONDOWN, wParam, lParam);
+            WindowIntPtrUtility.PostMessage(p, (uint)WM_LBUTTONDOWN, wParam, lParam);
             //UnityEngine.Debug.Log("PR:" + processId + " - " + (int)p + "l" + lParam +"x"+x+"y"+y );
         }
     }
@@ -196,7 +197,7 @@ public class SendKeyMessageToWindows
             IntPtr lParam = (IntPtr)GetLPARAMS(x, y);
             IntPtr wParam = IntPtr.Zero;
             WindowIntPtrUtility.PostMessage(p, (uint)WM_LBUTTONDOWN, wParam, lParam);
-            UnityEngine.Debug.Log("PR:" + processId + " - " + p.GetAsInt() + "l" + lParam +"x"+x+"y"+y );
+            UnityEngine.Debug.Log("PR:" + processId + " - " + p.GetAsInt() + "l" + lParam + "x" + x + "y" + y);
         }
     }
     public static void SendMouseRightUp(IntPtrWrapGet processId, int x, int y)
@@ -214,13 +215,14 @@ public class SendKeyMessageToWindows
     }
 
 
-    internal static void RequestPastActionBroadcast(IntPtrWrapGet processId, bool andRemoveV=true)
+    internal static void RequestPastActionBroadcast(IntPtrWrapGet processId, bool andRemoveV = true)
     {
-        SendKeyDown(User32PostMessageKeyEnum.VK_LCONTROL, processId, true); 
+        SendKeyDown(User32PostMessageKeyEnum.VK_LCONTROL, processId, true);
         SendKeyDown(User32PostMessageKeyEnum.VK_V, processId, true);
         SendKeyUp(User32PostMessageKeyEnum.VK_V, processId, true);
         SendKeyUp(User32PostMessageKeyEnum.VK_LCONTROL, processId, true);
-        if (andRemoveV) {
+        if (andRemoveV)
+        {
             SendKeyDown(User32PostMessageKeyEnum.VK_BACK, processId, true);
             SendKeyUp(User32PostMessageKeyEnum.VK_BACK, processId, true);
             SendKeyDown(User32PostMessageKeyEnum.VK_BACK, processId, true);

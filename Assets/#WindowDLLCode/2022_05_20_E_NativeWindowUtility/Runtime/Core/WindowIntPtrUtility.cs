@@ -2,7 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
 using UnityEngine;
 
 public class WindowIntPtrUtility
@@ -16,6 +18,8 @@ public class WindowIntPtrUtility
         public string m_processTitle;
         public IntPtr m_intPtrHandle;
 
+        public int m_processDisplayId;
+
         public IntPtrWrapGet GetAsParent()
         {
             return IntPtrTemp.Int(m_processId, true);
@@ -24,39 +28,134 @@ public class WindowIntPtrUtility
         {
             return IntPtrTemp.Int(m_processId, false);
         }
+
+        public bool IsProcessParent(int m_processTarget)
+        {
+            throw new NotImplementedException();
+        }
         //public uint m_intPtrHandleRaw;
         //public int m_intPtrHandleRaw2;
     }
 
+
+    public static string GetCurrentTopWindowText()
+    {
+        IntPtr hWnd = GetForegroundWindow();
+        int length = GetWindowTextLength(hWnd);
+        StringBuilder text = new StringBuilder(length + 1);
+        GetWindowText(hWnd, text, text.Capacity);
+        return text.ToString();
+    }
+    public static string GetWindowText(int process)
+    {
+        return GetWindowText(IntPtrProcessId.Int(process));
+    }
+    public static string GetWindowText(IntPtrWrapGet process)
+    {
+        return GetWindowText(process.GetAsIntPtr());
+    }
+    public static string GetWindowText(IntPtr hWnd)
+    {
+        int length = GetWindowTextLength(hWnd);
+        StringBuilder text = new StringBuilder(length + 1);
+        //SendMessage(hWnd, 0x000D, 0, 0);
+        GetWindowText(hWnd, text, text.Capacity);
+        return text.ToString();
+    }
+
+
+    [DllImport("user32.dll")]
+    private static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
+    [DllImport("user32.dll")]
+    static extern int GetWindowTextLength(IntPtr hWnd);
+    [DllImport("user32.dll")]
+    static extern int GetWindowTextLength(int hWnd);
+
     #region USER32
     [DllImport("user32.dll", SetLastError = true)]
-     static extern bool PostMessage(IntPtr hWnd, uint Msg, int wParam, int lParam);
+    static extern bool PostMessage(IntPtr hWnd, uint Msg, int wParam, int lParam);
     public static bool PostMessage(IntPtrWrapGet hWnd, uint Msg, int wParam, int lParam) { return PostMessage(hWnd.GetAsIntPtr(), Msg, wParam, lParam); }
 
     [DllImport("user32.dll", SetLastError = true)]
-     static extern bool SendMessage(IntPtr hWnd, uint Msg, int wParam, int lParam);
-    public static  bool SendMessage(IntPtrWrapGet hWnd, uint Msg, int wParam, int lParam) { return SendMessage(hWnd.GetAsIntPtr(), Msg, wParam, lParam); }
+    static extern bool SendMessage(IntPtr hWnd, uint Msg, int wParam, int lParam);
+    public static bool SendMessage(IntPtrWrapGet hWnd, uint Msg, int wParam, int lParam) { return SendMessage(hWnd.GetAsIntPtr(), Msg, wParam, lParam); }
 
     [DllImport("user32.dll", SetLastError = true)]
-     static extern bool PostMessage(IntPtr hWnd, uint Msg, uint wParam, uint lParam);
-    public static  bool PostMessage(IntPtrWrapGet hWnd, uint Msg, uint wParam, uint lParam) { return PostMessage(hWnd.GetAsIntPtr(), Msg, wParam, lParam); }
+    static extern bool PostMessage(IntPtr hWnd, uint Msg, uint wParam, uint lParam);
+    public static bool PostMessage(IntPtrWrapGet hWnd, uint Msg, uint wParam, uint lParam) { return PostMessage(hWnd.GetAsIntPtr(), Msg, wParam, lParam); }
 
     [DllImport("user32.dll", SetLastError = true)]
-     static extern bool PostMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
-    public static  bool PostMessage(IntPtrWrapGet hWnd, uint Msg, IntPtr wParam, IntPtr lParam) { return PostMessage(hWnd.GetAsIntPtr(), Msg, wParam, lParam); }
+    static extern bool PostMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
+    public static bool PostMessage(IntPtrWrapGet hWnd, uint Msg, IntPtr wParam, IntPtr lParam) { return PostMessage(hWnd.GetAsIntPtr(), Msg, wParam, lParam); }
 
     [DllImport("User32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-     static extern int SendMessage(IntPtr hWnd, uint msg, int wParam, IntPtr lParam);
-    public static int SendMessage(IntPtrWrapGet hWnd, uint msg, int wParam, IntPtr lParam) {return SendMessage(hWnd.GetAsIntPtr(), msg, wParam, lParam); }
+    static extern int SendMessage(IntPtr hWnd, uint msg, int wParam, IntPtr lParam);
+    public static int SendMessage(IntPtrWrapGet hWnd, uint msg, int wParam, IntPtr lParam) { return SendMessage(hWnd.GetAsIntPtr(), msg, wParam, lParam); }
 
 
 
     [DllImport("user32.dll", SetLastError = true)]
     static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
-    public static void FindWindow(string lpClassName, string lpWindowName, out IntPtrWrapGet process) { process=IntPtrTemp.Int(FindWindow(lpClassName, lpWindowName)); }
+    public static void FindWindow(string lpClassName, string lpWindowName, out IntPtrWrapGet process) { process = IntPtrTemp.Int(FindWindow(lpClassName, lpWindowName)); }
 
-    
+
     #endregion
+
+
+
+
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern bool MoveWindow(IntPtr hWnd, int xLeftRightTopLeftCorner, int yTopRightTopLeftCorner, int nWidthRight, int nHeightDown, bool bRepaint);
+    public static bool MoveWindow(IntPtrWrapGet hWnd,
+        int xLeftRightTopLeftCorner,
+        int yTopRightTopLeftCorner,
+        int nWidthRight, int nHeightDown,
+        bool bRepaint)
+    {
+        return MoveWindow(hWnd.GetAsIntPtr(), xLeftRightTopLeftCorner, yTopRightTopLeftCorner, nWidthRight, nHeightDown, true);
+    }
+
+    public static bool MoveWindow(IntPtrWrapGet hWnd, User32RelativePixelPointLRTB downLeft, User32RelativePixelPointLRTB topRight)
+    {
+
+        return MoveWindow(hWnd.GetAsIntPtr(), downLeft.m_pixelLeft2Right, topRight.m_pixelTop2Bot,
+            Math.Abs(downLeft.m_pixelLeft2Right - topRight.m_pixelLeft2Right),
+            Math.Abs(downLeft.m_pixelTop2Bot - topRight.m_pixelTop2Bot), true);
+    }
+    public static bool MoveWindowAtCenter(IntPtrWrapGet hWnd, User32RelativePixelPointLRTB center, int width, int height)
+    {
+        int wh = width / 2;
+        int hh = height / 2;
+        return MoveWindow(hWnd.GetAsIntPtr(),
+            center.m_pixelLeft2Right - wh,
+            center.m_pixelTop2Bot - hh,
+            width,
+            height, true);
+    }
+
+
+    [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+    public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+    public static void ShowWindow(IntPtrWrapGet hWnd, WindowDisplayType windowType)
+    {
+         ShowWindow(hWnd.GetAsIntPtr(), (int)windowType);
+    }
+    public static void ShowWindow(int hWnd, WindowDisplayType windowType)
+    {
+         ShowWindow(IntPtrProcessId.Int(hWnd), windowType);
+    }
+
+
+    public enum WindowDisplayType : int
+    {
+
+        Hide = 0,
+        Normal = 1,
+        SmallSize = 2,
+        MaxSize = 3,
+        Show = 5,
+        RestoreToDefault = 9
+    }
 
 
 
@@ -69,7 +168,7 @@ public class WindowIntPtrUtility
 
     public static void GetParentAndChildOf(IntPtrWrapGet pid, out IntPtrWrapGet parent, out IntPtrWrapGet activeChildren)
     {
-        if (pid == null || pid.GetAsInt()==0)
+        if (pid == null || pid.GetAsInt() == 0)
         {
             parent = new IntPtrTemp(0, true);
             activeChildren = new IntPtrTemp(0, false);
@@ -79,14 +178,15 @@ public class WindowIntPtrUtility
         WindowIntPtrUtility.FetchFirstChildrenThatHasDimension(pid,
             out bool foundChild, out activeChildren
             );
-        if (foundChild) {
+        if (foundChild)
+        {
 
             parent = pid;
             return;
         }
 
-            WindowIntPtrUtility.GetParentOfProcessId(pid, out bool foundParent,
-                out parent);
+        WindowIntPtrUtility.GetParentOfProcessId(pid, out bool foundParent,
+            out parent);
         if (!foundParent)
         {
             parent = new IntPtrTemp(pid.GetAsInt(), true);
@@ -160,7 +260,7 @@ public class WindowIntPtrUtility
         if (process == null || process.GetAsInt() == 0)
             return new IntPtrWrapGet[0];
 
-        int p =  process.GetAsInt();
+        int p = process.GetAsInt();
         IntPtrWrapGet[] apRet = (new IntPtrWrapGet[256]);
         int iCount = 0;
         IntPtr pLast = IntPtr.Zero;
@@ -169,15 +269,17 @@ public class WindowIntPtrUtility
             pLast = FindWindowEx(IntPtr.Zero, pLast, null, null);
             int iProcess_;
             GetWindowThreadProcessId(pLast, out iProcess_);
-            if (iProcess_ == p) apRet[iCount++] = IntPtrTemp.Int( pLast,true);
-        } while (pLast != IntPtr.Zero && iCount<256);
+            if (iProcess_ == p) apRet[iCount++] = IntPtrTemp.Int(pLast, true);
+        } while (pLast != IntPtr.Zero && iCount < 256);
         System.Array.Resize(ref apRet, iCount);
         return apRet;
     }
     [DllImport("user32.dll")]
-     static extern IntPtr FindWindowEx(IntPtr parentWindow, IntPtr previousChildWindow, string windowClass, string windowTitle);
+    static extern IntPtr FindWindowEx(IntPtr parentWindow, IntPtr previousChildWindow, string windowClass, string windowTitle);
     [DllImport("user32.dll")]
-     static extern IntPtr GetWindowThreadProcessId(IntPtr window, out int process);
+    static extern IntPtr GetWindowThreadProcessId(IntPtr window, out int process);
+
+
     #endregion
 
     [DllImport("user32.dll")]
@@ -188,23 +290,18 @@ public class WindowIntPtrUtility
     public struct Point { public int x; public int y; }
     [DllImport("user32.dll", EntryPoint = "SetCursorPos")]
     public static extern int SetCursorPos(int x, int y);
-    public static  int SetCursorPos(in User32CursorPointRelative position) {
+    public static int SetCursorPos(in User32CursorPointRelative position)
+    {
         return SetCursorPos(position.m_xLeft2Right, position.m_yTop2Down);
     }
-  
+
     [DllImport("User32.dll")]
     public static extern bool SetForegroundWindow(IntPtr hWnd);
     [DllImport("User32.dll")]
     public static extern bool SetForegroundWindow(int hWnd);
     public static bool SetForegroundWindow(IntPtrWrapGet pointer) => SetForegroundWindow(pointer.GetAsIntPtr());
 
-    //Use nCmdShow 3 to show
-    [DllImport("User32.dll")]
-    public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
-    public static bool ShowWindow(IntPtrWrapGet hwnd, in int nCmdShow)
-    {
-        return ShowWindow(hwnd.GetAsIntPtr(), nCmdShow);
-    }
+
 
     public static void RefreshInfoOf(ref DeductedInfoOfWindowSizeWithSource rectInfo)
     {
@@ -221,10 +318,10 @@ public class WindowIntPtrUtility
     {
         return GetWindowRect(hwnd.GetAsIntPtr(), ref rectangle);
     }
-    public static bool GetWindowRect(IntPtrWrapGet hwnd, out  IntPtrToRawRect rectangle)
+    public static bool GetWindowRect(IntPtrWrapGet hwnd, out IntPtrToRawRect rectangle)
     {
         RectPadValue value = new RectPadValue();
-        bool r = GetWindowRect(hwnd,ref   value);
+        bool r = GetWindowRect(hwnd, ref value);
         rectangle = new IntPtrToRawRect(hwnd, value);
         return r;
     }
@@ -295,7 +392,11 @@ public class WindowIntPtrUtility
     //    public int Bottom { get; set; }
     //}
 
-
+    public static void FetchProcessNativeInfoFrom(in string processName, out List<ProcessInformation> foundProcesses)
+    {
+        WindowIntPtrUtility.FetchAllProcesses(out List<ProcessInformation> processes);
+        WindowIntPtrUtility.FrechWindowWithExactProcessNameFrom(in processName, in processes, out foundProcesses);
+    }
 
     [ContextMenu("Refresh List")]
     public static void FrechWindowWithExactProcessNameFrom(in string processName, in List<ProcessInformation> processes, out List<ProcessInformation> foundProcesses)
@@ -325,15 +426,26 @@ public class WindowIntPtrUtility
         Process[] processlist = Process.GetProcesses();
         foreach (Process process in processlist)
         {
-            if (!String.IsNullOrEmpty(process.MainWindowTitle))
+            //if (!String.IsNullOrEmpty(process.MainWindowTitle))
             {
                 ProcessInformation win = new ProcessInformation()
                 {
                     m_processName = process.ProcessName,
                     m_processId = process.Id,
-                    m_processTitle = process.MainWindowTitle,
+                    m_processDisplayId = 0,
+                    m_processTitle = process.MainWindowTitle.Trim(),
                     m_intPtrHandle = process.Handle,
                 };
+                FetchFirstChildrenThatHasDimension(IntPtrProcessId.Int(process.Id), out bool found, out IntPtrWrapGet display);
+
+                win.m_processDisplayId = found ? display.GetAsInt() : 0;
+                if (win.m_processTitle.Length == 0 || win.m_processTitle == "null")
+                {
+                    if (found)
+                        win.m_processTitle = WindowIntPtrUtility.GetWindowText(display);
+                    else win.m_processTitle = "";
+                }
+
                 //GetWindowThreadProcessId(win.m_intPtrHandle, out win.m_intPtrHandleRaw);
                 //win.m_intPtrHandleRaw2 = GetProcessId(win.m_intPtrHandle );
 
@@ -342,6 +454,35 @@ public class WindowIntPtrUtility
             }
         }
     }
+
+    //public static void FetchAllProcesses(out List<ProcessInformation> processList, params string[] processExactName)
+    //{
+    //    processList = new List<ProcessInformation>();
+    //    processExactName = processExactName.Distinct().ToArray();
+    //    for (int i = 0; i < processExactName.Length; i++)
+    //    {
+    //        Process[] processlist = Process.GetProcesses(processExactName[i]);
+    //        foreach (Process process in processlist)
+    //        {
+    //            if (!String.IsNullOrEmpty(process.MainWindowTitle))
+    //            {
+    //                ProcessInformation win = new ProcessInformation()
+    //                {
+    //                    m_processName = process.ProcessName,
+    //                    m_processId = process.Id,
+    //                    m_processTitle = process.MainWindowTitle,
+    //                    m_intPtrHandle = process.Handle,
+    //                };
+    //                //GetWindowThreadProcessId(win.m_intPtrHandle, out win.m_intPtrHandleRaw);
+    //                //win.m_intPtrHandleRaw2 = GetProcessId(win.m_intPtrHandle );
+
+    //                processList.Add(win);
+    //                //Console.WriteLine("Process: {0} ID: {1} Window title: {2}", process.ProcessName, process.Id, process.MainWindowTitle);
+    //            }
+    //        }
+    //    }
+
+    //}
 
 
 
@@ -352,10 +493,20 @@ public class WindowIntPtrUtility
         xPxLeft2Right = m_tempPoint.x;
         yPxTop2Bottom = m_tempPoint.y;
     }
-    
+
     public static void FetchFirstChildrenThatHasDimension(IntPtrWrapGet intPtr, out bool foundChild, out IntPtrWrapGet target)
     {
         RectPadValue rect = new RectPadValue();
+
+        GetWindowRect(intPtr, ref rect);
+        if (rect.IsNotZero())
+        {
+            foundChild = true;
+            target = intPtr;
+            return;
+        }
+
+
         IntPtrWrapGet[] ptrs = GetProcessIdChildrenWindows(intPtr);
         for (int i = 0; i < ptrs.Length; i++)
         {
@@ -363,7 +514,7 @@ public class WindowIntPtrUtility
             if (rect.IsNotZero())
             {
                 foundChild = true;
-                target = ptrs[i] ;
+                target = ptrs[i];
                 return;
             }
         }
@@ -375,18 +526,55 @@ public class WindowIntPtrUtility
     private static extern IntPtr GetForegroundWindow();
     public static void GetCurrentChildrenFocusProcessId(out IntPtrWrapGet m_processId)
     {
-        m_processId = IntPtrTemp.Int( GetForegroundWindow(),false );
+        m_processId = IntPtrTemp.Int(GetForegroundWindow(), false);
     }
     public static void GetCurrentProcessId(out IntPtrWrapGet processId)
     {
-        processId = IntPtrTemp.Int(GetForegroundWindow(),false);
+        processId = IntPtrTemp.Int(GetForegroundWindow(), false);
     }
 
     public static void GetCurrentProcessId(out IntPtrWrapGet mainHandle, out IntPtrWrapGet processId)
     {
-        processId = IntPtrTemp.Int( Process.GetCurrentProcess().Id);
+        processId = IntPtrTemp.Int(Process.GetCurrentProcess().Id);
         mainHandle = IntPtrTemp.Int(Process.GetCurrentProcess().MainWindowHandle);
 
 
+    }
+
+    /// List of input https://learn.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codesz
+    [DllImport("user32.dll")]
+    static extern short GetAsyncKeyState(int VirtualKeyPressed);
+
+    public static bool IsMousePressing(User32MouseClassicButton button)
+    {
+        switch (button)
+        {
+            case User32MouseClassicButton.Left: return IsMousePressingLeft();
+            case User32MouseClassicButton.Middle: return IsMousePressingMiddle();
+            case User32MouseClassicButton.Right: return IsMousePressingRight();
+            default: return false;
+        }
+    }
+
+    public static bool IsMousePressingLeft()
+    {
+        if (GetAsyncKeyState(0x01) == 0)
+            return false;
+        else
+            return true;
+    }
+    public static bool IsMousePressingMiddle()
+    {
+        if (GetAsyncKeyState(0x04) == 0)
+            return false;
+        else
+            return true;
+    }
+    public static bool IsMousePressingRight()
+    {
+        if (GetAsyncKeyState(0x02) == 0)
+            return false;
+        else
+            return true;
     }
 }

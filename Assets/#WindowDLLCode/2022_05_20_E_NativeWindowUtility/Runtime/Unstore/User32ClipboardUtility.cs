@@ -25,7 +25,7 @@ public class User32ClipboardUtility
     static extern bool EmptyClipboard();
     private const uint CF_UNICODETEXT = 13;
 
-    public static bool CopyTextToClipboard(string text, bool emptyAfter=true)
+    public static bool CopyTextToClipboard(string text, bool emptyAfter = true)
     {
         if (!OpenClipboard(IntPtr.Zero))
         {
@@ -37,7 +37,7 @@ public class User32ClipboardUtility
         {
             //GlobalLock(global);
             SetClipboardData(CF_UNICODETEXT, global);
-           // GlobalUnlock(global);
+            // GlobalUnlock(global);
         }
         catch (Exception e)
         {
@@ -46,30 +46,71 @@ public class User32ClipboardUtility
         finally
         {
             //Marshal.FreeHGlobal(global);
-         if(emptyAfter)
-            EmptyClipboard();
+            if (emptyAfter)
+                EmptyClipboard();
             CloseClipboard();
         }
 
-//-------------------------------------------
-// Not sure, but it looks like we do not need 
-// to free HGLOBAL because Clipboard is now 
-// responsible for the copied data. (?)
-//
-// Otherwise the second call will crash
-// the app with a Win32 exception 
-// inside OpenClipboard() function
-//-------------------------------------------
-// Marshal.FreeHGlobal(global);
+        //-------------------------------------------
+        // Not sure, but it looks like we do not need 
+        // to free HGLOBAL because Clipboard is now 
+        // responsible for the copied data. (?)
+        //
+        // Otherwise the second call will crash
+        // the app with a Win32 exception 
+        // inside OpenClipboard() function
+        //-------------------------------------------
+        // Marshal.FreeHGlobal(global);
 
-return true;
+        return true;
+    }
+    public static void SetClipboardToEmpty(out bool failToPush) {
+        CopyTextToClipboard("", out failToPush);
+    }
+    public static bool CopyTextToClipboard(string text, out bool failToPush)
+    {
+        failToPush = false;
+        if (!OpenClipboard(IntPtr.Zero))
+        {
+            return false;
+        }
+
+        var global = Marshal.StringToHGlobalUni(text);
+        try
+        {
+            //GlobalLock(global);
+            SetClipboardData(CF_UNICODETEXT, global);
+            // GlobalUnlock(global);
+        }
+        catch (Exception e)
+        {
+            //throw e;
+            failToPush = true;
+        }
+        finally
+        {
+            CloseClipboard();
+        }
+
+        //-------------------------------------------
+        // Not sure, but it looks like we do not need 
+        // to free HGLOBAL because Clipboard is now 
+        // responsible for the copied data. (?)
+        //
+        // Otherwise the second call will crash
+        // the app with a Win32 exception 
+        // inside OpenClipboard() function
+        //-------------------------------------------
+        // Marshal.FreeHGlobal(global);
+
+        return true;
     }
 }
 
 
 
 
-class User32ClipboardUtilityType2
+class User32ClipboardUtilityFromFile
 {
     //https://blog.katastros.com/a?ID=00650-090a191b-2b7d-459e-9379-07caaa151f66
     [DllImport("kernel32.dll")]

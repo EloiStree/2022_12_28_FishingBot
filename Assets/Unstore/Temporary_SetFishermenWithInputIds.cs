@@ -6,7 +6,7 @@ using UnityEngine.UI;
 public class Temporary_SetFishermenWithInputIds : MonoBehaviour
 {
     public InputField [] m_processIdOfFishmen;
-    public Experiment_UdpMixerToFishingActions m_udpToActions;
+    public IndexToProcessIdCollectionMono m_indexToProcess;
 
     private void Start()
     {
@@ -25,19 +25,17 @@ public class Temporary_SetFishermenWithInputIds : MonoBehaviour
 
             for (int i = 0; i < m_processIdOfFishmen.Length; i++)
         {
-            if (i < m_udpToActions.m_fishermen.Length) {
 
                 if (int.TryParse(m_processIdOfFishmen[i].text, out int id))
                 {
-                    m_udpToActions.m_fishermen[i].m_active = true;
-                    m_udpToActions.m_fishermen[i].m_processId = id;
+                m_indexToProcess.SetProcessIdOf(i, id);
                 }
-                else {
-                    m_udpToActions.m_fishermen[i].m_active = false;
-                    m_udpToActions.m_fishermen[i].m_processId = 0;
+                else
+                {
+                    m_indexToProcess.SetProcessIdOf(i, 0);
                 }
             }
         }
-    }
+    
 
 }
