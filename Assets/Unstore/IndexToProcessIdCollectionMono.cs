@@ -18,6 +18,11 @@ public class IndexToProcessIdCollectionMono : MonoBehaviour
         m_indexToProcessId.GetProcessIdOf(in index, out  processId);
     }
 
+    internal void GetIntPtrValide(out IntPtrWrapGet[] ptr)
+    {
+        m_indexToProcessId.GetIntPtrValide(out ptr);
+    }
+
     public int GetCount()
     {
        return  m_indexToProcessId.GetCount();
@@ -62,5 +67,16 @@ public class IndexToProcessIdCollection
     public int GetCount()
     {
         return m_processIds.Count;
+    }
+
+    internal void GetIntPtrValide(out IntPtrWrapGet[] validePointer)
+    {
+        List<IntPtrWrapGet> pts = new List<IntPtrWrapGet>();
+        foreach (var item in m_processIds)
+        {
+            if(item>0)
+                pts.Add(IntPtrProcessId.Int(item));
+        }
+        validePointer = pts.ToArray();
     }
 }

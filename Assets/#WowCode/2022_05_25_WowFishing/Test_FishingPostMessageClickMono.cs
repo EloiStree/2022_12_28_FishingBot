@@ -10,6 +10,13 @@ using UnityEngine.Events;
 public class Test_FishingPostMessageClickMono : MonoBehaviour
 {
 
+
+    public void SetUseOfCameraViewes(bool useCameraViewes) {
+
+        //Dirty code
+        User32RelativePointsActionPusher.m_useCameraView = useCameraViewes;
+    }
+
     public void SetFishingAsActive(bool active)
     {
         m_fishManager.m_fishingConfig.m_isActive = active;
@@ -20,6 +27,10 @@ public class Test_FishingPostMessageClickMono : MonoBehaviour
     }
 
 
+    public void SetAsHyperOcean(bool isHyperocean)
+    {
+        m_fishManager.m_fishingConfig.m_isFishingHyperOcean = isHyperocean; 
+    }
 
     public void SetTimeBetweenCameraMove(float timeInMs)
     {
@@ -117,6 +128,7 @@ public class FishingByPostMessageClicker
         public int m_timeBetweenLineRelaunchMs = 500;
         public bool m_isActive = true;
         internal int m_timeBetweenRandomRangeMs;
+        public bool m_isFishingHyperOcean;
     }
 
 
@@ -124,6 +136,8 @@ public class FishingByPostMessageClicker
     public long m_recallTimeInMs;
 
     public User32PostMessageKeyEnum m_keyToFish = User32PostMessageKeyEnum.VK_DIVIDE;
+    public User32PostMessageKeyEnum m_keyToCancelCurrent = User32PostMessageKeyEnum.VK_SPACE;
+    public User32PostMessageKeyEnum m_keyToDejunk = User32PostMessageKeyEnum.VK_K;
     public User32PostMessageKeyEnum m_keyToInteract = User32PostMessageKeyEnum.VK_SUBTRACT;
     public string m_scriptToResetView = "/run SetView(1)";
     public string m_scriptToSaveView = "/run SaveView(1)";
@@ -150,12 +164,18 @@ public class FishingByPostMessageClicker
                 m_threadToSendActions.AddFromNowInMs(900, () =>
                 {
                     m_acitonDebug.PushIn("Send Post Down ");
-                    SendKeyMessageToWindows.SendKeyDown(m_keyToFish, processId, true);
+                    if(m_fishingConfig.m_isFishingHyperOcean)
+                        SendKeyMessageToWindows.SendKeyDown(m_keyToInteract, processId, true);
+                    else 
+                        SendKeyMessageToWindows.SendKeyDown(m_keyToFish, processId, true);
                 });
                 m_threadToSendActions.AddFromNowInMs(1000, () =>
                 {
                     m_acitonDebug.PushIn("Send Post Up ");
-                    SendKeyMessageToWindows.SendKeyUp(m_keyToFish, processId, true);
+                    if (m_fishingConfig.m_isFishingHyperOcean)
+                        SendKeyMessageToWindows.SendKeyUp(m_keyToInteract, processId, true);
+                    else
+                        SendKeyMessageToWindows.SendKeyUp(m_keyToFish, processId, true);
                 });
             }
             else
@@ -163,12 +183,19 @@ public class FishingByPostMessageClicker
 
                 m_threadToSendActions.AddFromNowInMs(0, () => {
                     m_acitonDebug.PushIn("Send Post Down ");
-                    SendKeyMessageToWindows.SendKeyDown(m_keyToFish, processId, true);
+
+                    if (m_fishingConfig.m_isFishingHyperOcean)
+                        SendKeyMessageToWindows.SendKeyDown(m_keyToInteract, processId, true);
+                    else 
+                        SendKeyMessageToWindows.SendKeyDown(m_keyToFish, processId, true);
                 });
                 m_threadToSendActions.AddFromNowInMs(10, () =>
                 {
                     m_acitonDebug.PushIn("Send Post Up ");
-                    SendKeyMessageToWindows.SendKeyUp(m_keyToFish, processId, true);
+                    if (m_fishingConfig.m_isFishingHyperOcean)
+                        SendKeyMessageToWindows.SendKeyUp(m_keyToInteract, processId, true);
+                    else 
+                        SendKeyMessageToWindows.SendKeyUp(m_keyToFish, processId, true);
                 });
             }
             m_notifyLineLaunchLaneOnUnityThread = true;
@@ -216,8 +243,11 @@ public class FishingByPostMessageClicker
                 m_threadToSendActions,
                 m_keyToFish,
                 m_keyToInteract,
+                m_keyToCancelCurrent,
+                m_keyToDejunk,
                 m_keyToResetView,
                 out int msAtEnd,
+                m_fishingConfig.m_isFishingHyperOcean,
                 m_fishingConfig.m_timeBetweenCameraMoveMs,
                 m_fishingConfig.m_timeBetweenPressMs,
                 m_fishingConfig.m_timeBetweenLineRelaunchMs,
@@ -403,15 +433,18 @@ public class User32RelativePointsActionPusher
         }
 
     }
-
+    public static bool m_useCameraView;
     internal static void RecovertFishWithAutoInteract(
         IntPtrWrapGet pointer,
         ThreadQueueDateTimeCallMono threadToUse,
         User32PostMessageKeyEnum fishSendLineKey,
         User32PostMessageKeyEnum fishInteractKey,
-        User32PostMessageKeyEnum [] cameraViewKey,
+        User32PostMessageKeyEnum fishCancelKey, 
+        User32PostMessageKeyEnum fishDejunkKey,
+        User32PostMessageKeyEnum[] cameraViewKey,
 
         out int msCountAtEnd,
+        bool isHyperOcean,
         int timeBetweenCameraMoveMs = 250,
         int timeBetweenPressMs = 10,
         int timeBeforeRelaunchLineMs = 150,
@@ -425,56 +458,119 @@ public class User32RelativePointsActionPusher
             {
                 int ms = 0;
 
-                for (int i = 0; i < cameraViewKey.Length; i++)
+
+                if (m_useCameraView)
                 {
-
-
-                    threadToUse.AddFromNowInMs(ms, () =>
+                    for (int i = 0; i < cameraViewKey.Length; i++)
                     {
 
-                        User32KeyStrokeManager.SendKeyPostMessage(pointer, fishInteractKey, User32PressionType.Press);
-                    });
-                    ms += timeBetweenPressMs;
 
-                    ms += UnityEngine.Random.Range(0, randomnessBetweenActionsRange);
+                        threadToUse.AddFromNowInMs(ms, () =>
+                        {
 
-                    threadToUse.AddFromNowInMs(ms, () =>
-                    {
+                            User32KeyStrokeManager.SendKeyPostMessage(pointer, fishInteractKey, User32PressionType.Press);
+                        });
+                        ms += timeBetweenPressMs;
 
-                        User32KeyStrokeManager.SendKeyPostMessage(pointer, fishInteractKey, User32PressionType.Release);
-                    });
-                    ms += 5;
+                        ms += UnityEngine.Random.Range(0, randomnessBetweenActionsRange);
 
-                    PressKeyView(pointer, threadToUse, cameraViewKey[i], ms);
-                    ms += timeBetweenPressMs;
-                    ms += UnityEngine.Random.Range(0, randomnessBetweenActionsRange);
-                    ReleaseKeyView(pointer, threadToUse, cameraViewKey[i], ms);
+                        threadToUse.AddFromNowInMs(ms, () =>
+                        {
 
-                    ms += (timeBetweenCameraMoveMs);
-                    threadToUse.AddFromNowInMs(ms, () =>
-                    {
-                        User32KeyStrokeManager.SendKeyPostMessage(pointer, fishInteractKey, User32PressionType.Press);
-                    });
-                    ms += UnityEngine.Random.Range(0, randomnessBetweenActionsRange);
-                    ms += timeBetweenPressMs;
-                    threadToUse.AddFromNowInMs(ms, () =>
-                    {
-                        User32KeyStrokeManager.SendKeyPostMessage(pointer, fishInteractKey, User32PressionType.Release);
-                    });
-                    ms += 5;
+                            User32KeyStrokeManager.SendKeyPostMessage(pointer, fishInteractKey, User32PressionType.Release);
+                        });
+                        ms += 5;
+
+                        PressKeyView(pointer, threadToUse, cameraViewKey[i], ms);
+                        ms += timeBetweenPressMs;
+                        ms += UnityEngine.Random.Range(0, randomnessBetweenActionsRange);
+                        ReleaseKeyView(pointer, threadToUse, cameraViewKey[i], ms);
+
+                        ms += (timeBetweenCameraMoveMs);
+                        threadToUse.AddFromNowInMs(ms, () =>
+                        {
+                            User32KeyStrokeManager.SendKeyPostMessage(pointer, fishInteractKey, User32PressionType.Press);
+                        });
+                        ms += UnityEngine.Random.Range(0, randomnessBetweenActionsRange);
+                        ms += timeBetweenPressMs;
+                        threadToUse.AddFromNowInMs(ms, () =>
+                        {
+                            User32KeyStrokeManager.SendKeyPostMessage(pointer, fishInteractKey, User32PressionType.Release);
+                        });
+                        ms += 5;
+
+                    }
 
                 }
+                else {
+                    threadToUse.AddFromNowInMs(ms, () =>
+                    {
+
+                        User32KeyStrokeManager.SendKeyPostMessage(pointer, fishInteractKey, User32PressionType.Press);
+                    });
+                    ms += timeBetweenPressMs;
+
+                    ms += UnityEngine.Random.Range(0, randomnessBetweenActionsRange);
+
+                    threadToUse.AddFromNowInMs(ms, () =>
+                    {
+
+                        User32KeyStrokeManager.SendKeyPostMessage(pointer, fishInteractKey, User32PressionType.Release);
+                    });
+                    ms += 5;
+                    
+                }
+
+                if (isHyperOcean)
+                {
+                    ms += 2000;
+
+                }
+
+
+                
+                threadToUse.AddFromNowInMs(ms, () => {
+                         User32KeyStrokeManager.SendKeyPostMessage(pointer, fishDejunkKey, User32PressionType.Press);
+                     });
+                ms += timeBetweenPressMs;
+                threadToUse.AddFromNowInMs(ms, () => {
+                    User32KeyStrokeManager.SendKeyPostMessage(pointer, fishDejunkKey, User32PressionType.Release);
+                });
 
                 ms += UnityEngine.Random.Range(0, randomnessBetweenActionsRange);
                 ms += timeBeforeRelaunchLineMs;
 
-                threadToUse.AddFromNowInMs(ms, () => {
-                    User32KeyStrokeManager.SendKeyPostMessage(pointer, fishSendLineKey, User32PressionType.Press);
-                });
-                ms += timeBetweenPressMs;
-                threadToUse.AddFromNowInMs(ms, () => {
-                    User32KeyStrokeManager.SendKeyPostMessage(pointer, fishSendLineKey, User32PressionType.Release);
-                });
+                if (isHyperOcean)
+                {
+                    threadToUse.AddFromNowInMs(ms, () => {
+                        User32KeyStrokeManager.SendKeyPostMessage(pointer, fishCancelKey, User32PressionType.Press);
+                    });
+                    ms += timeBetweenPressMs;
+                    threadToUse.AddFromNowInMs(ms, () => {
+                        User32KeyStrokeManager.SendKeyPostMessage(pointer, fishCancelKey, User32PressionType.Release);
+                    });
+                    ms += 1000;
+
+                    ms += (timeBetweenCameraMoveMs); 
+                    threadToUse.AddFromNowInMs(ms, () =>
+                    {
+                        User32KeyStrokeManager.SendKeyPostMessage(pointer, fishInteractKey, User32PressionType.Press);
+                    });
+                    ms += timeBetweenPressMs;
+                    threadToUse.AddFromNowInMs(ms, () =>
+                    {
+                        User32KeyStrokeManager.SendKeyPostMessage(pointer, fishInteractKey, User32PressionType.Release);
+                    });
+                }
+                else { 
+                    threadToUse.AddFromNowInMs(ms, () => {
+                        User32KeyStrokeManager.SendKeyPostMessage(pointer, fishSendLineKey, User32PressionType.Press);
+                    });
+                    ms += timeBetweenPressMs;
+                    threadToUse.AddFromNowInMs(ms, () => {
+                        User32KeyStrokeManager.SendKeyPostMessage(pointer, fishSendLineKey, User32PressionType.Release);
+                    });
+                }
                 ms += 5;
 
                 msCountAtEnd = ms;

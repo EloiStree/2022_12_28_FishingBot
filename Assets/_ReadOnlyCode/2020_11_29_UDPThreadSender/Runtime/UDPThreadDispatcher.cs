@@ -24,6 +24,8 @@ public class UDPThreadDispatcher : MonoBehaviour
     public bool m_hasBeenKilled;
     [TextArea(0,5)]
     public string m_errorHappend;
+    public UTFtype m_useUTF8 = UTFtype.UTF8;
+    public enum UTFtype { UTF8, Unicode}
 
     public bool m_useAwakeInit;
     private void Awake()
@@ -114,7 +116,8 @@ public class UDPThreadDispatcher : MonoBehaviour
             {
 
                 Byte[] receiveBytes = m_listener.Receive(ref m_ipEndPoint);
-                string returnData = Encoding.Unicode.GetString(receiveBytes);
+                
+                string returnData =m_useUTF8==UTFtype.UTF8 ? Encoding.UTF8.GetString(receiveBytes):  Encoding.Unicode.GetString(receiveBytes);
                 m_receivedMessages.Enqueue(returnData);
                 //RemoteIpEndPoint.Address.ToString() --  RemoteIpEndPoint.Port.ToString());
             }
@@ -122,7 +125,7 @@ public class UDPThreadDispatcher : MonoBehaviour
             {
                 m_wantThreadAlive = false;
                 m_errorHappend = e.StackTrace;
-                Debug.LogError(e.StackTrace);
+                Debug.LogWarning(e.StackTrace);
             }
             //Thread.Sleep(1);
         }

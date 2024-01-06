@@ -116,31 +116,127 @@ public class User32BoardcastUtilityToThread {
 
     }
 
-
-    internal static void CopyPastChatText(IntPtrWrapGet processId, string text)
+    public static void CopyPastChatText(IntPtrWrapGet [] processesId, string text,
+        int pressEnterMS, int pressCtrlVMS, int timeBetweenCopyKeyMS, int pressBacksMS, int validateMS,
+        User32PostMessageKeyEnum returnKey = User32PostMessageKeyEnum.VK_RETURN, int startTimeInMS = 0 
+         )
     {
-        IntPtrTemp t = new IntPtrTemp(processId);
 
-        ThreadQueueDateTimeCall.Instance.AddFromNowInMs(0, () =>
+        int time = startTimeInMS;
+        ThreadQueueDateTimeCall.Instance.AddFromNowInMs(time + 0, () =>
         {
-            WindowIntPtrUtility.SetForegroundWindow(t);
+            User32ClipboardUtility.CopyTextToClipboard(text, false);
         });
-        ThreadQueueDateTimeCall.Instance.AddFromNowInMs(80, () =>
+
+
+        foreach (var t in processesId)
+        {
+
+            ThreadQueueDateTimeCall.Instance.AddFromNowInMs(time + pressEnterMS, () =>
         {
             User32KeyStrokeManager.SendKeyPostMessage(t,
-               User32PostMessageKeyEnum.VK_RETURN,
+               returnKey,
                User32PressionType.Press);
             User32KeyStrokeManager.SendKeyPostMessage(t,
-                User32PostMessageKeyEnum.VK_RETURN,
+                returnKey,
                 User32PressionType.Release
                 );
 
         });
-        ThreadQueueDateTimeCall.Instance.AddFromNowInMs(150, () =>
+
+            ThreadQueueDateTimeCall.Instance.AddFromNowInMs(time + pressCtrlVMS, () =>
+            {
+
+                User32KeyStrokeManager.SendKeyPostMessage(t,
+                      User32PostMessageKeyEnum.VK_LCONTROL,
+                      User32PressionType.Press);
+
+                User32KeyStrokeManager.SendKeyPostMessage(t,
+                   User32PostMessageKeyEnum.VK_V,
+                   User32PressionType.Press);
+                User32KeyStrokeManager.SendKeyPostMessage(t,
+                    User32PostMessageKeyEnum.VK_V,
+                    User32PressionType.Release
+                    );
+                User32KeyStrokeManager.SendKeyPostMessage(t,
+                    User32PostMessageKeyEnum.VK_LCONTROL,
+                    User32PressionType.Release
+                    );
+            }); 
+            //ThreadQueueDateTimeCall.Instance.AddFromNowInMs(time + pressCtrlVMS, () =>
+            //{
+
+            //});
+            //ThreadQueueDateTimeCall.Instance.AddFromNowInMs(time + pressCtrlVMS + timeBetweenCopyKeyMS, () =>
+            //{
+                
+            //});
+            ThreadQueueDateTimeCall.Instance.AddFromNowInMs(time + pressBacksMS, () =>
+            {
+
+                User32KeyStrokeManager.SendKeyPostMessage(t,
+                     User32PostMessageKeyEnum.VK_BACK,
+                     User32PressionType.Press);
+                User32KeyStrokeManager.SendKeyPostMessage(t,
+                     User32PostMessageKeyEnum.VK_BACK,
+                     User32PressionType.Release);
+            }); 
+            ThreadQueueDateTimeCall.Instance.AddFromNowInMs(time + pressBacksMS+100, () =>
+            {
+
+                User32KeyStrokeManager.SendKeyPostMessage(t,
+                     User32PostMessageKeyEnum.VK_BACK,
+                     User32PressionType.Press);
+                User32KeyStrokeManager.SendKeyPostMessage(t,
+                     User32PostMessageKeyEnum.VK_BACK,
+                     User32PressionType.Release);
+            });
+            ThreadQueueDateTimeCall.Instance.AddFromNowInMs(time + validateMS, () =>
+            {
+                User32KeyStrokeManager.SendKeyPostMessage(t,
+                    User32PostMessageKeyEnum.VK_RETURN,
+                    User32PressionType.Press);
+                User32KeyStrokeManager.SendKeyPostMessage(t,
+                    User32PostMessageKeyEnum.VK_RETURN,
+                    User32PressionType.Release
+                    );
+            });
+            
+            
+        }
+
+
+    }
+    public static void CopyPastChatText(IntPtrWrapGet processId, string text, User32PostMessageKeyEnum returnKey =User32PostMessageKeyEnum.VK_RETURN, int startTimeInMS=0)
+    {
+        IntPtrTemp t ;
+        try
+        {
+             t = new IntPtrTemp(processId);
+        }
+        catch (Exception e) { Debug.Log("Error:" + e.StackTrace); return; }
+
+        int time = startTimeInMS;
+        ThreadQueueDateTimeCall.Instance.AddFromNowInMs(time+0, () =>
+        {
+            WindowIntPtrUtility.SetForegroundWindow(t);
+        });
+        ThreadQueueDateTimeCall.Instance.AddFromNowInMs(time + 80, () =>
+        {
+            User32KeyStrokeManager.SendKeyPostMessage(t,
+               returnKey,
+               User32PressionType.Press);
+            User32KeyStrokeManager.SendKeyPostMessage(t,
+                returnKey,
+                User32PressionType.Release
+                );
+
+        });
+        ThreadQueueDateTimeCall.Instance.AddFromNowInMs(time + 150, () =>
         {
             User32ClipboardUtility.CopyTextToClipboard(text,false);
         });
-        ThreadQueueDateTimeCall.Instance.AddFromNowInMs(250, () =>
+        ThreadQueueDateTimeCall.Instance.AddFromNowInMs(time + 250, () =>
         {
 
             User32KeyStrokeManager.SendKeyPostMessage(t,
@@ -158,7 +254,7 @@ public class User32BoardcastUtilityToThread {
                 User32PressionType.Release
                 );
         }); 
-        ThreadQueueDateTimeCall.Instance.AddFromNowInMs(300, () =>
+        ThreadQueueDateTimeCall.Instance.AddFromNowInMs(time + 300, () =>
         {
             User32KeyStrokeManager.SendKeyPostMessage(t,
                    User32PostMessageKeyEnum.VK_BACK,

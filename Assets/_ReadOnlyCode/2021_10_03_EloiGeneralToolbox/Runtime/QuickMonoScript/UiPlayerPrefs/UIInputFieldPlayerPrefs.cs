@@ -13,10 +13,12 @@ namespace be.eloistree.generaltoolbox
         public Eloi.PrimitiveUnityEvent_String m_onLoad;
         public bool m_notifyWhenReset=true;
         public string m_defaultValueIfEmpty;
+        public string m_lastLoaded;
         // Start is called before the first frame update
         void Awake()
         {
             string t = PlayerPrefs.GetString(m_id);
+            m_lastLoaded = t;
             if (string.IsNullOrEmpty(t))
                 t = m_defaultValueIfEmpty;
             if (m_notifyWhenReset)
